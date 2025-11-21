@@ -12,6 +12,6 @@ To install the Ultimate-Text-Selection-Translator script from GreasyFork, follow
    - Click on the **"Install this script"** button on the script page.
 
 ### Usage
-Once installed, select any text on a webpage and press Ctrl+L on Windows or Cmd+L on Mac to instantly translate it.
+Once installed, select any text on a webpage and press Ctrl+L to instantly translate it.
 
 ## **By Dℝ∃wX**
