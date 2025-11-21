@@ -1,6 +1,6 @@
 # Ultimate-Text-Selection-Translator
 
-<p><strong>Ultimate Text Selection Translator</strong> is a powerful script that lets you instantly translate any selected text on any web page using a simple keyboard shortcut: <code>Cmd+L</code> (Mac) or <code>Ctrl+L</code> (Windows). No more copy-pasting into external translators — it all happens in a flash.</p>
+<p><strong>Ultimate Text Selection Translator</strong> is a powerful script that lets you instantly translate any selected text on any web page using a simple keyboard shortcut: <code>Ctrl+L</code>. No more copy-pasting into external translators — it all happens in a flash.</p>
 
 <ul>
   <li>Supports all languages: whatever the source language, the script automatically detects the selected text's language.</li>
