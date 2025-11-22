@@ -23,7 +23,7 @@
 // @license      Apache-2.0
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
-// @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/Icon_Translate_Script.png
+// @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
 // @connect      translate.googleapis.com
 // @tag          translation
 // @tag          text selection
