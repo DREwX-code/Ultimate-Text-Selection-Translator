@@ -7,8 +7,11 @@
 // @name:zh-CN        Ultimate Text Selection Translator – 即时翻译所选文本
 // @name:zh-TW        Ultimate Text Selection Translator – 即時翻譯所選文字
 // @name:ja           Ultimate Text Selection Translator – 選択テキストを即座に翻訳
+// @name:pt           Ultimate Text Selection Translator – Traduza instantaneamente qualquer texto selecionado
+// @name:it           Ultimate Text Selection Translator – Traduci all’istante qualsiasi testo selezionato
+
 // @namespace         http://tampermonkey.net/
-// @version           1.3.1
+// @version           1.3.2
 // @description       Translate selected text instantly using Ctrl+L. Supports all languages and automatically detects the selected language, translating it into your browser's default language. Simple, fast, and efficient.
 // @description:fr    Traduis instantanément n’importe quel texte sélectionné avec Ctrl+L. Prend en charge toutes les langues, détecte automatiquement la langue sélectionnée et la traduit dans la langue par défaut de ton navigateur. Simple, rapide et efficace.
 // @description:es    Traduce al instante cualquier texto seleccionado con Ctrl+L. Compatible con todos los idiomas, detecta automáticamente el idioma seleccionado y lo traduce al idioma predeterminado de tu navegador. Simple, rápido y eficiente.
@@ -17,6 +20,8 @@
 // @description:zh-CN 使用 Ctrl+L 可即时翻译所选文本。支持所有语言，自动检测所选语言，并翻译为浏览器的默认语言。简单、快速、高效。
 // @description:zh-TW 使用 Ctrl+L 可即時翻譯所選文字。支援所有語言，自動偵測所選語言，並翻譯為瀏覽器的預設語言。簡單、快速、高效。
 // @description:ja    Ctrl+L で選択したテキストを即座に翻訳。すべての言語に対応し、選択された言語を自動的に検出して、ブラウザのデフォルト言語に翻訳。シンプル、スピーディー、効率的。
+// @description:pt     Traduza texto selecionado instantaneamente usando Ctrl+L. Suporta todos os idiomas e detecta automaticamente o idioma selecionado, traduzindo para o idioma padrão do seu navegador. Simples, rápido e eficiente.
+// @description:it     Traduci immediatamente il testo selezionato usando Ctrl+L. Supporta tutte le lingue e rileva automaticamente la lingua selezionata, traducendola nella lingua predefinita del tuo browser. Semplice, veloce ed efficiente.
 
 // @author       Dℝ∃wX
 // @copyright    2025 DℝᴇwX
@@ -84,6 +89,15 @@ limitations under the License.
                 'listenTranslated': 'Listen to translated text',
                 'listenOriginal': 'Listen to original text'
             },
+            'overlay': {
+                'title': 'Fullscreen Translator',
+                'source': 'Source text',
+                'target': 'Translated text',
+                'translate': 'Translate',
+                'open': 'Fullscreen',
+                'sourceLangLabel': 'Source language',
+                'targetLangLabel': 'Target language'
+            },
             'dragHandleLabel': 'Move',
             'settingsTitle': 'Settings',
             'settingsDefaultLabel': 'Default translation language:',
@@ -109,6 +123,15 @@ limitations under the License.
             'tooltips': {
                 'listenTranslated': 'Écoute le texte traduit',
                 'listenOriginal': 'Écoute le texte original'
+            },
+            'overlay': {
+                'title': 'Traduction plein écran',
+                'source': 'Texte source',
+                'target': 'Texte traduit',
+                'translate': 'Traduire',
+                'open': 'Plein écran',
+                'sourceLangLabel': 'Langue source',
+                'targetLangLabel': 'Langue cible'
             },
             'dragHandleLabel': 'Déplacer',
             'settingsTitle': 'Paramètres',
@@ -322,6 +345,7 @@ limitations under the License.
     let errors = langNames.errors;
     let tooltips = langNames.tooltips;
     let dragHandleLabel = langNames.dragHandleLabel || languageNames.en.dragHandleLabel;
+    let overlayLabels = langNames.overlay || languageNames.en.overlay;
     let settingsTitle = langNames.settingsTitle || languageNames.en.settingsTitle;
     let settingsDefaultLabel = langNames.settingsDefaultLabel || languageNames.en.settingsDefaultLabel;
     let settingsToolLabel = langNames.settingsToolLabel || languageNames.en.settingsToolLabel;
@@ -515,7 +539,17 @@ limitations under the License.
             .join('');
     }
 
+    function buildSourceLanguageOptionsHtml() {
+        const entries = Object.entries(googleTranslateLanguages)
+            .sort(([, a], [, b]) => a.localeCompare(b));
+        const options = entries
+            .map(([code, name]) => `<option value="${code}">${name}</option>`)
+            .join('');
+        return `<option value="auto">${langNames.auto}</option>${options}`;
+    }
+
     const toolLanguageOptionsHtml = buildToolLanguageOptionsHtml();
+    let sourceLanguageOptionsHtml = buildSourceLanguageOptionsHtml();
 
     const targetLanguageOptionsHtml = buildTargetLanguageOptions(true);
 
@@ -622,6 +656,15 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
         </div>
+        <div id="fullscreenToggle" style="cursor: pointer;" title="${overlayLabels.open}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+        </div>
         <div id="settingsButton" style="cursor: pointer;" title="Settings">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -659,6 +702,109 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
 
 
     `;
+
+    const fullscreenOverlay = document.createElement('div');
+    fullscreenOverlay.id = 'fullscreenOverlay';
+    fullscreenOverlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(8px);
+        z-index: 10001;
+        padding: 18px;
+    `;
+    fullscreenOverlay.innerHTML = `
+      <div id="fullscreenPanel" style="width: min(1100px, 95vw); min-height: 40vh; background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%); color: #fff; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 32px rgba(0,0,0,0.45); padding: 22px 22px 16px; position: relative;">
+        <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom: 14px;">
+            <div id="fullscreenTitle" style="font-size:16px; font-weight:700; letter-spacing:0.4px; color:#e7e9ff;">${overlayLabels.title}</div>
+            <div id="fullscreenClose" style="cursor:pointer; width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:8px; transition: background 0.15s ease;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+        <div style="display:flex; gap: 16px; min-height: 280px; flex-wrap: wrap;">
+            <div style="flex:1; min-width:280px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <label id="fullscreenSourceLabel" style="color:#cfd3ff; font-size:13px; font-weight:600; letter-spacing:0.2px;">${overlayLabels.source}</label>
+                    <div id="fullscreenSourcePicker" style="position:relative;">
+                        <button id="fullscreenSourceLangTrigger" style="display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:8px; background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; cursor:pointer; font-size:12px;">
+                            <span id="fullscreenSourceLangCurrent">${langNames.auto}</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div id="fullscreenSourceLangPanel" style="display:none; position:absolute; top:110%; right:0; width:280px; max-height:260px; background: rgba(30,30,47,0.98); border:1px solid rgba(255,255,255,0.12); box-shadow:0 10px 24px rgba(0,0,0,0.35); border-radius:10px; padding:8px; z-index:10002;">
+                            <input id="fullscreenSourceLangSearch" placeholder="${langNames.navigator}" style="width:100%; max-width:100%; box-sizing:border-box; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none;" />
+                            <div id="fullscreenSourceLangGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:6px; max-height:190px; overflow-y:auto; padding-top:8px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <select id="fullscreenSourceLang" style="display:none;">${sourceLanguageOptionsHtml}</select>
+                <textarea id="fullscreenSource" style="flex:1; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
+                <div style="display:flex; gap:8px; margin-top:6px;">
+                    <div id="fullscreenSourceCopy" style="width:38px; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; cursor:pointer; background: rgba(255,255,255,0.06);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </div>
+                    <div id="fullscreenSourceSpeak" style="width:38px; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; cursor:pointer; background: rgba(255,255,255,0.06);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div id="fullscreenSwap" title="Swap" style="align-self:center; width:40px; height:40px; border-radius:10px; background: rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; transition: background 0.15s ease, transform 0.2s ease;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <line x1="3" y1="5" x2="21" y2="5"></line>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <line x1="21" y1="19" x2="3" y2="19"></line>
+                </svg>
+            </div>
+            <div style="flex:1; min-width:280px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <label id="fullscreenTargetLabel" style="color:#cfd3ff; font-size:13px; font-weight:600; letter-spacing:0.2px;">${overlayLabels.target}</label>
+                    <div id="fullscreenTargetPicker" style="position:relative;">
+                        <button id="fullscreenTargetLangTrigger" style="display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:8px; background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; cursor:pointer; font-size:12px;">
+                            <span id="fullscreenTargetLangCurrent">${getLanguageLabel(defaultTargetLang)}</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div id="fullscreenTargetLangPanel" style="display:none; position:absolute; top:110%; right:0; width:280px; max-height:260px; background: rgba(30,30,47,0.98); border:1px solid rgba(255,255,255,0.12); box-shadow:0 10px 24px rgba(0,0,0,0.35); border-radius:10px; padding:8px; z-index:10002;">
+                            <input id="fullscreenTargetLangSearch" placeholder="${langNames.navigator}" style="width:100%; max-width:100%; box-sizing:border-box; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none;" />
+                            <div id="fullscreenTargetLangGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:6px; max-height:190px; overflow-y:auto; padding-top:8px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <select id="fullscreenTargetLang" style="display:none;">${targetLanguageOptionsHtml}</select>
+                <textarea id="fullscreenTarget" style="flex:1; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
+                <div style="display:flex; gap:8px; margin-top:6px;">
+                    <div id="fullscreenTargetCopy" style="width:38px; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; cursor:pointer; background: rgba(255,255,255,0.06);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </div>
+                    <div id="fullscreenTargetSpeak" style="width:38px; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; cursor:pointer; background: rgba(255,255,255,0.06);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(fullscreenOverlay);
 
     const BOX_W = 420;
     const BOX_H = 260;
@@ -768,13 +914,41 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
     const sourceAutoOption = sourceLangSelect.querySelector('option[value="auto"]');
     const settingsHeader = translationBox.querySelector('#settingsHeader');
     const settingsHeaderTitle = translationBox.querySelector('#settingsHeaderTitle');
+    const fullscreenTitleEl = fullscreenOverlay.querySelector('#fullscreenTitle');
+    const fullscreenClose = fullscreenOverlay.querySelector('#fullscreenClose');
+    const fullscreenSourceLangSelect = fullscreenOverlay.querySelector('#fullscreenSourceLang');
+    const fullscreenTargetLangSelect = fullscreenOverlay.querySelector('#fullscreenTargetLang');
+    const fullscreenSourceLangCurrent = fullscreenOverlay.querySelector('#fullscreenSourceLangCurrent');
+    const fullscreenTargetLangCurrent = fullscreenOverlay.querySelector('#fullscreenTargetLangCurrent');
+    const fullscreenSourceLangSearch = fullscreenOverlay.querySelector('#fullscreenSourceLangSearch');
+    const fullscreenTargetLangSearch = fullscreenOverlay.querySelector('#fullscreenTargetLangSearch');
+    const fullscreenSourceLangGrid = fullscreenOverlay.querySelector('#fullscreenSourceLangGrid');
+    const fullscreenTargetLangGrid = fullscreenOverlay.querySelector('#fullscreenTargetLangGrid');
+    const fullscreenSourceLangPanel = fullscreenOverlay.querySelector('#fullscreenSourceLangPanel');
+    const fullscreenTargetLangPanel = fullscreenOverlay.querySelector('#fullscreenTargetLangPanel');
+    const fullscreenSourceLangTrigger = fullscreenOverlay.querySelector('#fullscreenSourceLangTrigger');
+    const fullscreenTargetLangTrigger = fullscreenOverlay.querySelector('#fullscreenTargetLangTrigger');
+    const fullscreenSourceLabel = fullscreenOverlay.querySelector('#fullscreenSourceLabel');
+    const fullscreenTargetLabel = fullscreenOverlay.querySelector('#fullscreenTargetLabel');
+    const fullscreenSwap = fullscreenOverlay.querySelector('#fullscreenSwap');
+    const fullscreenSource = fullscreenOverlay.querySelector('#fullscreenSource');
+    const fullscreenTarget = fullscreenOverlay.querySelector('#fullscreenTarget');
+    const fullscreenSourceCopy = fullscreenOverlay.querySelector('#fullscreenSourceCopy');
+    const fullscreenSourceSpeak = fullscreenOverlay.querySelector('#fullscreenSourceSpeak');
+    const fullscreenTargetCopy = fullscreenOverlay.querySelector('#fullscreenTargetCopy');
+    const fullscreenTargetSpeak = fullscreenOverlay.querySelector('#fullscreenTargetSpeak');
+    const fullscreenToggle = translationBox.querySelector('#fullscreenToggle');
 
     sourceLangSelect.value = 'auto';
+
+    const inlineLanguagePanels = [];
+    let fullscreenSwapRotation = 0;
 
     let currentSelectedText = '';
     let currentTranslatedText = '';
     let detectedSourceLang = 'auto';
     let currentResolvedTargetLang = browserLang;
+    let fullscreenTranslateTimer = null;
 
     function getSelectedText() {
         return window.getSelection().toString().trim();
@@ -824,6 +998,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
         errors = langNames.errors;
         tooltips = langNames.tooltips;
         dragHandleLabel = langNames.dragHandleLabel || languageNames.en.dragHandleLabel;
+        overlayLabels = langNames.overlay || languageNames.en.overlay;
         settingsTitle = langNames.settingsTitle || languageNames.en.settingsTitle;
         settingsDefaultLabel = langNames.settingsDefaultLabel || languageNames.en.settingsDefaultLabel;
         settingsToolLabel = langNames.settingsToolLabel || languageNames.en.settingsToolLabel;
@@ -839,6 +1014,22 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
         if (speakOriginal) speakOriginal.textContent = tooltips.listenOriginal;
         const dragLabelEl = translationBox.querySelector('#dragHandle span');
         if (dragLabelEl) dragLabelEl.textContent = dragHandleLabel;
+        if (fullscreenTitleEl) fullscreenTitleEl.textContent = overlayLabels.title;
+        if (fullscreenSourceLabel) fullscreenSourceLabel.textContent = overlayLabels.source;
+        if (fullscreenTargetLabel) fullscreenTargetLabel.textContent = overlayLabels.target;
+        if (fullscreenToggle) fullscreenToggle.title = overlayLabels.open;
+        if (fullscreenSourceLangSelect) {
+            const prev = fullscreenSourceLangSelect.value || 'auto';
+            sourceLanguageOptionsHtml = buildSourceLanguageOptionsHtml();
+            fullscreenSourceLangSelect.innerHTML = sourceLanguageOptionsHtml;
+            fullscreenSourceLangSelect.value = fullscreenSourceLangSelect.querySelector(`option[value="${prev}"]`) ? prev : 'auto';
+        }
+        if (fullscreenTargetLangSelect) {
+            const prev = fullscreenTargetLangSelect.value || defaultTargetLang;
+            const refreshedTargetOptionsOverlay = buildTargetLanguageOptions(true);
+            fullscreenTargetLangSelect.innerHTML = refreshedTargetOptionsOverlay;
+            ensureSelectValue(fullscreenTargetLangSelect, prev);
+        }
 
         if (toolLanguageSelect) {
             toolLanguageSelect.innerHTML = buildToolLanguageOptionsHtml();
@@ -1012,9 +1203,45 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
     }
 
 
-    function speak(text, lang) {
+    let currentUtterance = null;
+    let currentSpeakerId = null;
+    let speechPlaying = false;
+
+    function stopSpeaking() {
+        speechPlaying = false;
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            window.speechSynthesis.cancel();
+        }
+        currentUtterance = null;
+        currentSpeakerId = null;
+    }
+
+    function speak(text, lang, speakerId = null) {
+        if (!text) return;
+        const normalizedLang = lang || browserLang;
+
+        const engineSpeaking = speechPlaying || window.speechSynthesis.speaking || window.speechSynthesis.pending || !!currentUtterance;
+        const sameSpeaker = speakerId && speakerId === currentSpeakerId;
+
+        if (sameSpeaker) {
+            stopSpeaking();
+            return;
+        }
+
+        if (engineSpeaking) {
+            stopSpeaking();
+        }
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
+        utterance.lang = normalizedLang;
+        currentUtterance = utterance;
+        currentSpeakerId = speakerId;
+        speechPlaying = true;
+        utterance.onend = utterance.onerror = () => {
+            currentUtterance = null;
+            currentSpeakerId = null;
+            speechPlaying = false;
+        };
         window.speechSynthesis.speak(utterance);
     }
 
@@ -1113,13 +1340,13 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
     speakTranslated.addEventListener('click', () => {
         if (currentTranslatedText) {
             const langForSpeech = currentResolvedTargetLang || (targetLangSelect.value === 'navigator' ? browserLang : targetLangSelect.value);
-            speak(currentTranslatedText, langForSpeech);
+            speak(currentTranslatedText, langForSpeech, 'panel-translated');
         }
     });
 
     speakOriginal.addEventListener('click', () => {
         if (currentSelectedText) {
-            speak(currentSelectedText, detectedSourceLang);
+            speak(currentSelectedText, detectedSourceLang, 'panel-original');
         }
     });
 
@@ -1132,6 +1359,301 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             }, 1000);
         }
     });
+
+    function openFullscreenOverlay() {
+        fullscreenOverlay.style.display = 'flex';
+        fullscreenSource.value = currentSelectedText || '';
+        fullscreenTarget.value = currentTranslatedText || '';
+        if (fullscreenSourceLangSelect) {
+            const srcVal = sourceLangSelect ? sourceLangSelect.value : 'auto';
+            fullscreenSourceLangSelect.value = fullscreenSourceLangSelect.querySelector(`option[value="${srcVal}"]`) ? srcVal : 'auto';
+        }
+        if (fullscreenTargetLangSelect) {
+            const tgtVal = targetLangSelect ? targetLangSelect.value : defaultTargetLang;
+            ensureSelectValue(fullscreenTargetLangSelect, tgtVal);
+        }
+        hideLanguagePanels();
+        renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
+        renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
+        scheduleFullscreenTranslate(0);
+    }
+
+    function closeFullscreenOverlay() {
+        fullscreenOverlay.style.display = 'none';
+    }
+
+    function translateInFullscreen() {
+        const text = fullscreenSource.value.trim();
+        const target = fullscreenTargetLangSelect ? fullscreenTargetLangSelect.value : (targetLangSelect ? targetLangSelect.value : defaultTargetLang);
+        const srcLang = fullscreenSourceLangSelect ? fullscreenSourceLangSelect.value || 'auto' : 'auto';
+        translateText(text, srcLang, target, (translation, pos, resolvedTargetLang) => {
+            fullscreenTarget.value = translation;
+            currentResolvedTargetLang = resolvedTargetLang || currentResolvedTargetLang;
+        }, { x: 0, y: 0 });
+    }
+
+    function scheduleFullscreenTranslate(delay = 250) {
+        if (fullscreenTranslateTimer) clearTimeout(fullscreenTranslateTimer);
+        fullscreenTranslateTimer = setTimeout(() => {
+            fullscreenTranslateTimer = null;
+            translateInFullscreen();
+        }, delay);
+    }
+
+    function hideLanguagePanels() {
+        if (fullscreenSourceLangPanel) fullscreenSourceLangPanel.style.display = 'none';
+        if (fullscreenTargetLangPanel) fullscreenTargetLangPanel.style.display = 'none';
+    }
+
+    function renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl) {
+        if (!gridEl || !selectEl) return;
+        const query = (searchEl && searchEl.value || '').toLowerCase();
+        const btns = [];
+        const current = selectEl.value || 'auto';
+
+        const pushBtn = (code, name) => {
+            const active = code === current;
+            btns.push(`<button data-code="${code}" style="
+                padding:6px 8px;
+                text-align:left;
+                border-radius:8px;
+                border:1px solid ${active ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'};
+                background:${active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)'};
+                color:#fff;
+                cursor:pointer;
+                font-size:12px;
+                transition:background 0.15s ease, border 0.15s ease;
+            ">${name}</button>`);
+        };
+
+        const entries = [['auto', langNames.auto], ...Object.entries(googleTranslateLanguages).sort(([, a], [, b]) => a.localeCompare(b))];
+        entries.forEach(([code, name]) => {
+            if (query && !name.toLowerCase().includes(query) && !code.toLowerCase().includes(query)) return;
+            pushBtn(code, name);
+        });
+
+        gridEl.innerHTML = btns.join('');
+        gridEl.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const code = btn.getAttribute('data-code');
+                selectEl.value = code;
+                if (currentLabelEl) currentLabelEl.textContent = getLanguageLabel(code);
+                renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl);
+                if (panelEl) panelEl.style.display = 'none';
+                scheduleFullscreenTranslate(0);
+            });
+        });
+        if (currentLabelEl) currentLabelEl.textContent = getLanguageLabel(current);
+    }
+
+    if (fullscreenSourceCopy) fullscreenSourceCopy.addEventListener('click', () => {
+        const text = fullscreenSource.value || '';
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        const svg = fullscreenSourceCopy.querySelector('svg');
+        if (svg) {
+            svg.style.stroke = '#00ff99';
+            setTimeout(() => { svg.style.stroke = '#ffffff'; }, 900);
+        }
+    });
+
+    if (fullscreenTargetCopy) fullscreenTargetCopy.addEventListener('click', () => {
+        const text = fullscreenTarget.value || '';
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        const svg = fullscreenTargetCopy.querySelector('svg');
+        if (svg) {
+            svg.style.stroke = '#00ff99';
+            setTimeout(() => { svg.style.stroke = '#ffffff'; }, 900);
+        }
+    });
+
+    if (fullscreenSourceSpeak) fullscreenSourceSpeak.addEventListener('click', () => {
+        const text = fullscreenSource.value.trim();
+        if (!text) return;
+        const selectedSrc = fullscreenSourceLangSelect ? fullscreenSourceLangSelect.value : 'auto';
+        const langForSpeech = (selectedSrc && selectedSrc !== 'auto') ? selectedSrc
+            : (detectedSourceLang && detectedSourceLang !== 'auto') ? detectedSourceLang
+            : (sourceLangSelect.value && sourceLangSelect.value !== 'auto' ? sourceLangSelect.value : browserLang);
+        speak(text, langForSpeech, 'fs-source');
+    });
+
+    if (fullscreenTargetSpeak) fullscreenTargetSpeak.addEventListener('click', () => {
+        const text = fullscreenTarget.value.trim();
+        if (!text) return;
+        let tgtLang = fullscreenTargetLangSelect ? fullscreenTargetLangSelect.value : (targetLangSelect ? targetLangSelect.value : defaultTargetLang);
+        if (tgtLang === 'navigator') tgtLang = browserLang;
+        speak(text, tgtLang || browserLang, 'fs-target');
+    });
+
+    if (fullscreenSourceLangSearch) fullscreenSourceLangSearch.addEventListener('input', () => {
+        renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
+    });
+        if (fullscreenTargetLangSearch) fullscreenTargetLangSearch.addEventListener('input', () => {
+            renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
+        });
+
+        if (fullscreenSource) fullscreenSource.addEventListener('input', () => scheduleFullscreenTranslate());
+        if (fullscreenSourceLangSelect) fullscreenSourceLangSelect.addEventListener('change', () => scheduleFullscreenTranslate(0));
+        if (fullscreenTargetLangSelect) fullscreenTargetLangSelect.addEventListener('change', () => scheduleFullscreenTranslate(0));
+
+    function swapFullscreenContent() {
+        if (!fullscreenSource || !fullscreenTarget || !fullscreenSourceLangSelect || !fullscreenTargetLangSelect) return;
+
+        const srcText = fullscreenSource.value;
+        fullscreenSource.value = fullscreenTarget.value;
+        fullscreenTarget.value = srcText;
+
+        const srcLang = fullscreenSourceLangSelect.value || 'auto';
+        const tgtLang = fullscreenTargetLangSelect.value || defaultTargetLang;
+        fullscreenSourceLangSelect.value = tgtLang;
+        fullscreenTargetLangSelect.value = srcLang;
+
+        if (fullscreenSourceLangCurrent) fullscreenSourceLangCurrent.textContent = getLanguageLabel(fullscreenSourceLangSelect.value);
+        if (fullscreenTargetLangCurrent) fullscreenTargetLangCurrent.textContent = getLanguageLabel(fullscreenTargetLangSelect.value);
+
+        scheduleFullscreenTranslate(0);
+    }
+
+    if (fullscreenSwap) {
+        fullscreenSwap.addEventListener('click', () => {
+            swapFullscreenContent();
+            fullscreenSwapRotation += 360;
+            fullscreenSwap.style.transform = `rotate(${fullscreenSwapRotation}deg)`;
+        });
+    }
+
+    function togglePanel(panelEl, otherPanel) {
+        if (!panelEl) return;
+        const isOpen = panelEl.style.display === 'block';
+        hideLanguagePanels();
+        panelEl.style.display = isOpen ? 'none' : 'block';
+    }
+
+    if (fullscreenSourceLangTrigger) fullscreenSourceLangTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePanel(fullscreenSourceLangPanel, fullscreenTargetLangPanel);
+        renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
+    });
+
+    if (fullscreenTargetLangTrigger) fullscreenTargetLangTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePanel(fullscreenTargetLangPanel, fullscreenSourceLangPanel);
+        renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
+    });
+
+    document.addEventListener('mousedown', (e) => {
+        if (fullscreenSourceLangPanel && !fullscreenSourceLangPanel.contains(e.target) && fullscreenSourceLangTrigger && !fullscreenSourceLangTrigger.contains(e.target)) {
+            fullscreenSourceLangPanel.style.display = 'none';
+        }
+        if (fullscreenTargetLangPanel && !fullscreenTargetLangPanel.contains(e.target) && fullscreenTargetLangTrigger && !fullscreenTargetLangTrigger.contains(e.target)) {
+            fullscreenTargetLangPanel.style.display = 'none';
+        }
+        inlineLanguagePanels.forEach(({ panel, selectEl }) => {
+            if (!panel.contains(e.target) && !selectEl.contains(e.target)) {
+                panel.style.display = 'none';
+            }
+        });
+    });
+
+    function hideInlinePanels(except) {
+        inlineLanguagePanels.forEach(p => {
+            if (p.panel === except) return;
+            p.panel.style.display = 'none';
+        });
+    }
+
+    function buildInlinePanel(selectEl, placeholder = langNames.navigator) {
+        const panel = document.createElement('div');
+        panel.style.cssText = `
+            display:none;
+            position: fixed;
+            width: 280px;
+            max-height: 260px;
+            background: rgba(30,30,47,0.98);
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+            border-radius: 10px;
+            padding: 8px;
+            z-index: 10002;
+        `;
+        panel.innerHTML = `
+            <input class="inlineLangSearch" placeholder="${placeholder}" style="width:100%; max-width:100%; box-sizing:border-box; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none;" />
+            <div class="inlineLangGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:6px; max-height:190px; overflow-y:auto; padding-top:8px;"></div>
+        `;
+        document.body.appendChild(panel);
+        inlineLanguagePanels.push({ panel, selectEl });
+        return panel;
+    }
+
+    function attachInlineLanguagePanel(selectEl) {
+        if (!selectEl) return;
+        const panel = buildInlinePanel(selectEl);
+        const searchEl = panel.querySelector('.inlineLangSearch');
+        const gridEl = panel.querySelector('.inlineLangGrid');
+
+        function render() {
+            const opts = Array.from(selectEl.options)
+                .filter(o => !o.disabled)
+                .map(o => ({ value: o.value, label: o.textContent || o.value }));
+            const query = (searchEl.value || '').toLowerCase();
+            const current = selectEl.value;
+            const btns = opts
+                .filter(({ value, label }) => !query || label.toLowerCase().includes(query) || value.toLowerCase().includes(query))
+                .map(({ value, label }) => {
+                    const active = value === current;
+                    return `<button data-code="${value}" style="
+                        padding:6px 8px;
+                        text-align:left;
+                        border-radius:8px;
+                        border:1px solid ${active ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'};
+                        background:${active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)'};
+                        color:#fff;
+                        cursor:pointer;
+                        font-size:12px;
+                        transition:background 0.15s ease, border 0.15s ease;
+                    ">${label}</button>`;
+                }).join('');
+            gridEl.innerHTML = btns;
+            gridEl.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.getAttribute('data-code');
+                    selectEl.value = code;
+                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    hideInlinePanels();
+                });
+            });
+        }
+
+        if (searchEl) searchEl.addEventListener('input', render);
+
+        selectEl.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const rect = selectEl.getBoundingClientRect();
+            const scrollX = window.scrollX || document.documentElement.scrollLeft || 0;
+            const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+            const top = rect.bottom + scrollY + 4;
+            const left = Math.min(rect.left + scrollX, scrollX + window.innerWidth - 290);
+            const isOpen = panel.style.display === 'block';
+            hideInlinePanels(panel);
+            if (isOpen) {
+                panel.style.display = 'none';
+                return;
+            }
+            render();
+            panel.style.left = `${left}px`;
+            panel.style.top = `${top}px`;
+            panel.style.display = 'block';
+        });
+    }
+
+    attachInlineLanguagePanel(sourceLangSelect);
+    attachInlineLanguagePanel(targetLangSelect);
+    attachInlineLanguagePanel(defaultTranslateLangSelect);
+    attachInlineLanguagePanel(toolLanguageSelect);
+
+    if (fullscreenToggle) fullscreenToggle.addEventListener('click', openFullscreenOverlay);
+    if (fullscreenClose) fullscreenClose.addEventListener('click', closeFullscreenOverlay);
     const closeButton = translationBox.querySelector('#closeButton');
     closeButton.addEventListener('click', () => {
         translationBox.style.display = 'none';
@@ -1175,6 +1697,18 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
 
 
     document.addEventListener('mousedown', (e) => {
+        const clickInInlinePanel = inlineLanguagePanels.some(({ panel, selectEl }) =>
+            panel.contains(e.target) || selectEl.contains(e.target)
+        );
+        const clickInFullscreenLangPanel =
+            (fullscreenSourceLangPanel && fullscreenSourceLangPanel.contains(e.target)) ||
+            (fullscreenTargetLangPanel && fullscreenTargetLangPanel.contains(e.target)) ||
+            (fullscreenSourceLangTrigger && fullscreenSourceLangTrigger.contains(e.target)) ||
+            (fullscreenTargetLangTrigger && fullscreenTargetLangTrigger.contains(e.target));
+        const clickInFullscreenOverlay = fullscreenOverlay && fullscreenOverlay.contains(e.target);
+
+        if (clickInInlinePanel || clickInFullscreenLangPanel || clickInFullscreenOverlay) return;
+
         if (!translationBox.contains(e.target)) {
             translationBox.style.display = 'none';
             translationBox.style.opacity = '0';
