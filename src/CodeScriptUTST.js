@@ -11,7 +11,7 @@
 // @name:it           Ultimate Text Selection Translator – Traduci all’istante qualsiasi testo selezionato
 
 // @namespace         http://tampermonkey.net/
-// @version           1.3.2
+// @version           1.3.3
 // @description       Translate selected text instantly using Ctrl+L. Supports all languages and automatically detects the selected language, translating it into your browser's default language. Simple, fast, and efficient.
 // @description:fr    Traduis instantanément n’importe quel texte sélectionné avec Ctrl+L. Prend en charge toutes les langues, détecte automatiquement la langue sélectionnée et la traduit dans la langue par défaut de ton navigateur. Simple, rapide et efficace.
 // @description:es    Traduce al instante cualquier texto seleccionado con Ctrl+L. Compatible con todos los idiomas, detecta automáticamente el idioma seleccionado y lo traduce al idioma predeterminado de tu navegador. Simple, rápido y eficiente.
@@ -1380,6 +1380,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
 
     function closeFullscreenOverlay() {
         fullscreenOverlay.style.display = 'none';
+        stopSpeaking();
     }
 
     function translateInFullscreen() {
@@ -1405,7 +1406,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
         if (fullscreenTargetLangPanel) fullscreenTargetLangPanel.style.display = 'none';
     }
 
-    function renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl) {
+    function renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl, customOptions) {
         if (!gridEl || !selectEl) return;
         const query = (searchEl && searchEl.value || '').toLowerCase();
         const btns = [];
@@ -1426,11 +1427,20 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             ">${name}</button>`);
         };
 
-        const entries = [['auto', langNames.auto], ...Object.entries(googleTranslateLanguages).sort(([, a], [, b]) => a.localeCompare(b))];
-        entries.forEach(([code, name]) => {
-            if (query && !name.toLowerCase().includes(query) && !code.toLowerCase().includes(query)) return;
-            pushBtn(code, name);
-        });
+        if (customOptions && customOptions.length) {
+            customOptions.forEach(({ value, label }) => {
+                const code = value;
+                const name = label;
+                if (query && !name.toLowerCase().includes(query) && !code.toLowerCase().includes(query)) return;
+                pushBtn(code, name);
+            });
+        } else {
+            const entries = [['auto', langNames.auto], ...Object.entries(googleTranslateLanguages).sort(([, a], [, b]) => a.localeCompare(b))];
+            entries.forEach(([code, name]) => {
+                if (query && !name.toLowerCase().includes(query) && !code.toLowerCase().includes(query)) return;
+                pushBtn(code, name);
+            });
+        }
 
         gridEl.innerHTML = btns.join('');
         gridEl.querySelectorAll('button').forEach(btn => {
@@ -1563,11 +1573,29 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
         });
     }
 
+    function positionInlinePanel(panel, selectEl) {
+        if (!panel || panel.style.display !== 'block' || !selectEl) return;
+        const rect = selectEl.getBoundingClientRect();
+        const scrollX = window.scrollX || document.documentElement.scrollLeft || 0;
+        const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        const panelWidth = panel.offsetWidth || 280;
+        const left = Math.min(rect.left + scrollX, scrollX + window.innerWidth - panelWidth - 10);
+        const top = rect.bottom + scrollY + 4;
+        panel.style.left = `${left}px`;
+        panel.style.top = `${top}px`;
+    }
+
+    function updateInlinePanelsPosition() {
+        inlineLanguagePanels.forEach(({ panel, selectEl }) => {
+            positionInlinePanel(panel, selectEl);
+        });
+    }
+
     function buildInlinePanel(selectEl, placeholder = langNames.navigator) {
         const panel = document.createElement('div');
         panel.style.cssText = `
             display:none;
-            position: fixed;
+            position: absolute;
             width: 280px;
             max-height: 260px;
             background: rgba(30,30,47,0.98);
@@ -1575,7 +1603,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             box-shadow: 0 10px 24px rgba(0,0,0,0.35);
             border-radius: 10px;
             padding: 8px;
-            z-index: 10002;
+            z-index: 2147483646;
         `;
         panel.innerHTML = `
             <input class="inlineLangSearch" placeholder="${placeholder}" style="width:100%; max-width:100%; box-sizing:border-box; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none;" />
@@ -1596,25 +1624,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             const opts = Array.from(selectEl.options)
                 .filter(o => !o.disabled)
                 .map(o => ({ value: o.value, label: o.textContent || o.value }));
-            const query = (searchEl.value || '').toLowerCase();
-            const current = selectEl.value;
-            const btns = opts
-                .filter(({ value, label }) => !query || label.toLowerCase().includes(query) || value.toLowerCase().includes(query))
-                .map(({ value, label }) => {
-                    const active = value === current;
-                    return `<button data-code="${value}" style="
-                        padding:6px 8px;
-                        text-align:left;
-                        border-radius:8px;
-                        border:1px solid ${active ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'};
-                        background:${active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)'};
-                        color:#fff;
-                        cursor:pointer;
-                        font-size:12px;
-                        transition:background 0.15s ease, border 0.15s ease;
-                    ">${label}</button>`;
-                }).join('');
-            gridEl.innerHTML = btns;
+            renderLanguageGrid(gridEl, searchEl, selectEl, null, panel, opts);
             gridEl.querySelectorAll('button').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const code = btn.getAttribute('data-code');
@@ -1627,13 +1637,9 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
 
         if (searchEl) searchEl.addEventListener('input', render);
 
-        selectEl.addEventListener('mousedown', (e) => {
+        const openInlinePanel = (e) => {
             e.preventDefault();
-            const rect = selectEl.getBoundingClientRect();
-            const scrollX = window.scrollX || document.documentElement.scrollLeft || 0;
-            const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-            const top = rect.bottom + scrollY + 4;
-            const left = Math.min(rect.left + scrollX, scrollX + window.innerWidth - 290);
+            e.stopPropagation();
             const isOpen = panel.style.display === 'block';
             hideInlinePanels(panel);
             if (isOpen) {
@@ -1641,9 +1647,16 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
                 return;
             }
             render();
-            panel.style.left = `${left}px`;
-            panel.style.top = `${top}px`;
             panel.style.display = 'block';
+            positionInlinePanel(panel, selectEl);
+        };
+
+        selectEl.addEventListener('pointerdown', openInlinePanel, { capture: true });
+        selectEl.addEventListener('mousedown', openInlinePanel);
+        selectEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                openInlinePanel(e);
+            }
         });
     }
 
@@ -1661,6 +1674,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
         translationBox.style.transform = 'translateY(10px)';
         sourceLangSelect.value = 'auto';
         detectedSourceLang = 'auto';
+        stopSpeaking();
 
         const translatorPanel = document.getElementById('translatorPanel');
         const settingsPanel = document.getElementById('settingsPanel');
@@ -1716,6 +1730,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             sourceLangSelect.value = 'auto';
             detectedSourceLang = 'auto';
             if (settingsHeader) settingsHeader.style.display = 'none';
+            stopSpeaking();
         }
     });
 
@@ -1730,4 +1745,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
     }
 
     translationBox.addEventListener('transitionend', adjustBoxPosition);
+
+    window.addEventListener('scroll', updateInlinePanelsPosition, true);
+    window.addEventListener('resize', updateInlinePanelsPosition);
 })();
