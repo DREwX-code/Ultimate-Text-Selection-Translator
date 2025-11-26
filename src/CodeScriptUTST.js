@@ -1,35 +1,102 @@
 // ==UserScript==
-// @name              Ultimate Text Selection Translator – Instantly Translate Any Selected Text
-// @name:fr           Ultimate Text Selection Translator – Traduis instantanément n’importe quel texte sélectionné
-// @name:es           Ultimate Text Selection Translator – Traduce al instante cualquier texto seleccionado
-// @name:de           Ultimate Text Selection Translator – Übersetze sofort ausgewählten Text
-// @name:ru           Ultimate Text Selection Translator – Мгновенный перевод выделенного текста
-// @name:zh-CN        Ultimate Text Selection Translator – 即时翻译所选文本
-// @name:zh-TW        Ultimate Text Selection Translator – 即時翻譯所選文字
-// @name:ja           Ultimate Text Selection Translator – 選択テキストを即座に翻訳
-// @name:pt           Ultimate Text Selection Translator – Traduza instantaneamente qualquer texto selecionado
-// @name:it           Ultimate Text Selection Translator – Traduci all’istante qualsiasi testo selezionato
+// @name             Ultimate Text Selection Translator – Instantly Translate Any Selected Text
+// @name:fr          Ultimate Text Selection Translator – Traduisez instantanément n'importe quel texte sélectionné
+// @name:es          Ultimate Text Selection Translator – Traduce instantáneamente cualquier texto seleccionado
+// @name:de          Ultimate Text Selection Translator – Übersetzen Sie jeden ausgewählten Text sofort
+// @name:ru          Ultimate Text Selection Translator – Мгновенно переводите любой выделенный текст
+// @name:zh-CN       Ultimate Text Selection Translator – 立即翻译任何选定的文本
+// @name:zh-TW       Ultimate Text Selection Translator – 立即翻譯任何選定的文本
+// @name:ja          Ultimate Text Selection Translator – 選択したテキストを即座に翻訳
+// @name:pt          Ultimate Text Selection Translator – Traduza instantaneamente qualquer texto selecionado
+// @name:it          Ultimate Text Selection Translator – Traduci istantaneamente qualsiasi testo selezionato
+// @name:ar          Ultimate Text Selection Translator – ترجمة فورية لأي نص محدد
+// @name:be          Ultimate Text Selection Translator – Імгненна перакладайце любы выбраны тэкст
+// @name:bg          Ultimate Text Selection Translator – Незабавен превод на всеки избран текст
+// @name:cs          Ultimate Text Selection Translator – Okamžitě přeložte jakýkoli vybraný text
+// @name:da          Ultimate Text Selection Translator – Oversæt øjeblikkeligt enhver valgt tekst
+// @name:el          Ultimate Text Selection Translator – Μεταφράστε άμεσα οποιοδήποτε επιλεγμένο κείμενο
+// @name:eo          Ultimate Text Selection Translator – Tuj Traduku Iun Elektitan Tekston
+// @name:fi          Ultimate Text Selection Translator – Käännä välittömästi kaikki valitut tekstit
+// @name:he          Ultimate Text Selection Translator – תרגם באופן מיידי כל טקסט שנבחר
+// @name:hr          Ultimate Text Selection Translator – Trenutačno prevedite bilo koji odabrani tekst
+// @name:hu          Ultimate Text Selection Translator – Azonnal lefordíthatja a kiválasztott szöveget
+// @name:id          Ultimate Text Selection Translator – Terjemahkan Teks yang Dipilih Secara Instan
+// @name:ka          Ultimate Text Selection Translator – მყისიერად თარგმნეთ ნებისმიერი არჩეული ტექსტი
+// @name:ko          Ultimate Text Selection Translator – 선택한 텍스트를 즉시 번역하세요
+// @name:mr          Ultimate Text Selection Translator – कोणताही निवडलेला मजकूर त्वरित अनुवादित करा
+// @name:nl          Ultimate Text Selection Translator – Vertaal onmiddellijk elke geselecteerde tekst
+// @name:nb          Ultimate Text Selection Translator – Oversett alle valgt tekst umiddelbart
+// @name:pl          Ultimate Text Selection Translator – Natychmiast przetłumacz dowolny zaznaczony tekst
+// @name:pt-BR       Ultimate Text Selection Translator – Traduza instantaneamente qualquer texto selecionado
+// @name:ro          Ultimate Text Selection Translator – Traduceți instantaneu orice text selectat
+// @name:sk          Ultimate Text Selection Translator – Okamžite preložte akýkoľvek vybraný text
+// @name:sr          Ultimate Text Selection Translator – Одмах преведите било који одабрани текст
+// @name:sv          Ultimate Text Selection Translator – Översätt direkt valfri text
+// @name:th          Ultimate Text Selection Translator – แปลข้อความที่เลือกทันที
+// @name:tr          Ultimate Text Selection Translator – Seçilen Metni Anında Çevir
+// @name:ug          Ultimate Text Selection Translator – تاللانغان تېكىستنى دەرھال تەرجىمە قىلىڭ
+// @name:uk          Ultimate Text Selection Translator – Миттєво перекладіть будь-який виділений текст
+// @name:vi          Ultimate Text Selection Translator – Dịch ngay lập tức mọi văn bản đã chọn
+// @name:fr-CA       Ultimate Text Selection Translator – Traduisez instantanément n'importe quel texte sélectionné
+// @name:ckb         Ultimate Text Selection Translator – Her Nivîsarek Hilbijartî tavilê Wergerîne
+// @name:es-419      Ultimate Text Selection Translator – Traduce instantáneamente cualquier texto seleccionado
 
-// @namespace         http://tampermonkey.net/
-// @version           1.3.3
 // @description       Translate selected text instantly using Ctrl+L. Supports all languages and automatically detects the selected language, translating it into your browser's default language. Simple, fast, and efficient.
-// @description:fr    Traduis instantanément n’importe quel texte sélectionné avec Ctrl+L. Prend en charge toutes les langues, détecte automatiquement la langue sélectionnée et la traduit dans la langue par défaut de ton navigateur. Simple, rapide et efficace.
-// @description:es    Traduce al instante cualquier texto seleccionado con Ctrl+L. Compatible con todos los idiomas, detecta automáticamente el idioma seleccionado y lo traduce al idioma predeterminado de tu navegador. Simple, rápido y eficiente.
-// @description:de    Übersetze ausgewählten Text sofort mit Ctrl+L. Unterstützt alle Sprachen, erkennt automatisch die ausgewählte Sprache und übersetzt sie in die Standardsprache deines Browsers. Einfach, schnell und effizient.
-// @description:ru    Мгновенно переводите выделенный текст с помощью Ctrl+L. Поддерживает все языки, автоматически определяет выделенный язык и переводит его на язык по умолчанию вашего браузера. Просто, быстро и эффективно.
-// @description:zh-CN 使用 Ctrl+L 可即时翻译所选文本。支持所有语言，自动检测所选语言，并翻译为浏览器的默认语言。简单、快速、高效。
-// @description:zh-TW 使用 Ctrl+L 可即時翻譯所選文字。支援所有語言，自動偵測所選語言，並翻譯為瀏覽器的預設語言。簡單、快速、高效。
-// @description:ja    Ctrl+L で選択したテキストを即座に翻訳。すべての言語に対応し、選択された言語を自動的に検出して、ブラウザのデフォルト言語に翻訳。シンプル、スピーディー、効率的。
-// @description:pt     Traduza texto selecionado instantaneamente usando Ctrl+L. Suporta todos os idiomas e detecta automaticamente o idioma selecionado, traduzindo para o idioma padrão do seu navegador. Simples, rápido e eficiente.
-// @description:it     Traduci immediatamente il testo selezionato usando Ctrl+L. Supporta tutte le lingue e rileva automaticamente la lingua selezionata, traducendola nella lingua predefinita del tuo browser. Semplice, veloce ed efficiente.
+// @description:fr    Traduisez instantanément le texte sélectionné à l’aide de Ctrl+L. Prend en charge toutes les langues et détecte automatiquement la langue sélectionnée, la traduisant dans la langue par défaut de votre navigateur. Simple, rapide et efficace.
+// @description:es    Traduce el texto seleccionado al instante usando Ctrl+L. Admite todos los idiomas y detecta automáticamente el idioma seleccionado, traduciéndolo al idioma predeterminado de su navegador. Sencillo, rápido y eficiente.
+// @description:de    Übersetzen Sie den ausgewählten Text sofort mit Strg+L. Unterstützt alle Sprachen, erkennt die ausgewählte Sprache automatisch und übersetzt sie in die Standardsprache Ihres Browsers. Einfach, schnell und effizient.
+// @description:ru    Мгновенно переводите выделенный текст с помощью Ctrl+L. Поддерживает все языки и автоматически определяет выбранный язык, переводя его на язык вашего браузера по умолчанию. Просто, быстро и эффективно.
+// @description:zh-CN 使用 Ctrl+L 立即翻译所选文本。支持所有语言并自动检测所选语言，将其翻译为浏览器的默认语言。简单、快速、高效。
+// @description:zh-TW 使用 Ctrl+L 立即翻譯所選文本。支持所有語言並自動檢測所選語言，將其翻譯為瀏覽器的默認語言。簡單、快速、高效。
+// @description:ja    Ctrl+L を使用して、選択したテキストを即座に翻訳します。すべての言語をサポートし、選択した言語を自動的に検出し、ブラウザのデフォルト言語に翻訳します。シンプル、高速、効率的です。
+// @description:pt    Traduza o texto selecionado instantaneamente usando Ctrl+L. Suporta todos os idiomas e detecta automaticamente o idioma selecionado, traduzindo-o para o idioma padrão do seu navegador. Simples, rápido e eficiente.
+// @description:it    Traduci istantaneamente il testo selezionato utilizzando Ctrl+L. Supporta tutte le lingue e rileva automaticamente la lingua selezionata, traducendola nella lingua predefinita del tuo browser. Semplice, veloce ed efficiente.
+// @description:ar    ترجمة النص المحدد على الفور باستخدام Ctrl+L. يدعم جميع اللغات ويكتشف اللغة المحددة تلقائيًا، ويترجمها إلى اللغة الافتراضية للمتصفح الخاص بك. بسيطة وسريعة وفعالة.
+// @description:be    Перакладзіце вылучаны тэкст імгненна, выкарыстоўваючы Ctrl+L. Падтрымлівае ўсе мовы і аўтаматычна вызначае выбраную мову, перакладаючы яе на мову вашага браўзера па змаўчанні. Проста, хутка і эфектыўна.
+// @description:bg    Превеждайте незабавно избрания текст с помощта на Ctrl+L. Поддържа всички езици и автоматично открива избрания език, превеждайки го на езика по подразбиране на вашия браузър. Просто, бързо и ефективно.
+// @description:cs    Okamžitě přeložte vybraný text pomocí Ctrl+L. Podporuje všechny jazyky a automaticky detekuje vybraný jazyk a překládá jej do výchozího jazyka vašeho prohlížeče. Jednoduché, rychlé a efektivní.
+// @description:da    Oversæt valgt tekst øjeblikkeligt ved hjælp af Ctrl+L. Understøtter alle sprog og registrerer automatisk det valgte sprog og oversætter det til din browsers standardsprog. Enkel, hurtig og effektiv.
+// @description:el    Μεταφράστε το επιλεγμένο κείμενο άμεσα χρησιμοποιώντας Ctrl+L. Υποστηρίζει όλες τις γλώσσες και εντοπίζει αυτόματα την επιλεγμένη γλώσσα, μεταφράζοντάς την στην προεπιλεγμένη γλώσσα του προγράμματος περιήγησής σας. Απλό, γρήγορο και αποτελεσματικό.
+// @description:eo    Traduku elektitan tekston tuj uzante Ctrl+L. Subtenas ĉiujn lingvojn kaj aŭtomate detektas la elektitan lingvon, tradukante ĝin al la defaŭlta lingvo de via retumilo. Simpla, rapida kaj efika.
+// @description:fi    Käännä valittu teksti välittömästi painamalla Ctrl+L. Tukee kaikkia kieliä ja tunnistaa automaattisesti valitun kielen kääntäen sen selaimesi oletuskielelle. Yksinkertaista, nopeaa ja tehokasta.
+// @description:he    תרגם טקסט נבחר באופן מיידי באמצעות Ctrl+L. תומך בכל השפות ומזהה אוטומטית את השפה הנבחרת, ומתרגם אותה לשפת ברירת המחדל של הדפדפן שלך. פשוט, מהיר ויעיל.
+// @description:hr    Trenutačno prevedite odabrani tekst pomoću Ctrl+L. Podržava sve jezike i automatski otkriva odabrani jezik, prevodeći ga na zadani jezik vašeg preglednika. Jednostavno, brzo i učinkovito.
+// @description:hu    A kijelölt szöveget azonnal lefordíthatja a Ctrl+L billentyűkombinációval. Támogatja az összes nyelvet, és automatikusan felismeri a kiválasztott nyelvet, lefordítva azt a böngésző alapértelmezett nyelvére. Egyszerű, gyors és hatékony.
+// @description:id    Terjemahkan teks yang dipilih secara instan menggunakan Ctrl+L. Mendukung semua bahasa dan secara otomatis mendeteksi bahasa yang dipilih, menerjemahkannya ke bahasa default browser Anda. Sederhana, cepat, dan efisien.
+// @description:ka    შერჩეული ტექსტის თარგმნა მყისიერად Ctrl+L-ის გამოყენებით. მხარს უჭერს ყველა ენას და ავტომატურად ამოიცნობს არჩეულ ენას, თარგმნის მას თქვენი ბრაუზერის ნაგულისხმევ ენაზე. მარტივი, სწრაფი და ეფექტური.
+// @description:ko    Ctrl+L을 사용하여 선택한 텍스트를 즉시 번역하세요. 모든 언어를 지원하고 선택한 언어를 자동으로 감지하여 브라우저의 기본 언어로 번역합니다. 간단하고 빠르며 효율적입니다.
+// @description:mr    Ctrl+L वापरून निवडलेल्या मजकुराचे झटपट भाषांतर करा. सर्व भाषांना सपोर्ट करते आणि निवडलेली भाषा आपोआप ओळखते, ती तुमच्या ब्राउझरच्या डीफॉल्ट भाषेत अनुवादित करते. साधे, जलद आणि कार्यक्षम.
+// @description:nl    Vertaal geselecteerde tekst onmiddellijk met Ctrl+L. Ondersteunt alle talen en detecteert automatisch de geselecteerde taal en vertaalt deze naar de standaardtaal van uw browser. Eenvoudig, snel en efficiënt.
+// @description:nb    Oversett valgt tekst umiddelbart ved å bruke Ctrl+L. Støtter alle språk og oppdager automatisk det valgte språket, og oversetter det til nettleserens standardspråk. Enkelt, raskt og effektivt.
+// @description:pl    Przetłumacz zaznaczony tekst natychmiast, używając Ctrl+L. Obsługuje wszystkie języki i automatycznie wykrywa wybrany język, tłumacząc go na domyślny język Twojej przeglądarki. Prosto, szybko i skutecznie.
+// @description:pt-BR Traduza o texto selecionado instantaneamente usando Ctrl+L. Suporta todos os idiomas e detecta automaticamente o idioma selecionado, traduzindo-o para o idioma padrão do seu navegador. Simples, rápido e eficiente.
+// @description:ro    Traduceți textul selectat instantaneu folosind Ctrl+L. Acceptă toate limbile și detectează automat limba selectată, traducând-o în limba implicită a browserului. Simplu, rapid și eficient.
+// @description:sk    Preložte vybraný text okamžite pomocou Ctrl+L. Podporuje všetky jazyky a automaticky rozpozná vybraný jazyk a preloží ho do predvoleného jazyka prehliadača. Jednoduché, rýchle a efektívne.
+// @description:sr    Одмах преведите изабрани текст користећи Цтрл+Л. Подржава све језике и аутоматски детектује изабрани језик, преводећи га на подразумевани језик вашег претраживача. Једноставно, брзо и ефикасно.
+// @description:sv    Översätt markerad text direkt med Ctrl+L. Stöder alla språk och upptäcker automatiskt det valda språket och översätter det till din webbläsares standardspråk. Enkelt, snabbt och effektivt.
+// @description:th    แปลข้อความที่เลือกทันทีโดยใช้ Ctrl+L รองรับทุกภาษาและตรวจจับภาษาที่เลือกโดยอัตโนมัติ โดยแปลเป็นภาษาเริ่มต้นของเบราว์เซอร์ของคุณ ง่าย รวดเร็ว และมีประสิทธิภาพ
+// @description:tr    Seçilen metni Ctrl+L tuşlarını kullanarak anında çevirin. Tüm dilleri destekler ve seçilen dili otomatik olarak algılayarak tarayıcınızın varsayılan diline çevirir. Basit, hızlı ve verimli.
+// @description:ug    تاللانغان تېكىستنى دەرھال CTRL + L ئارقىلىق تەرجىمە قىلىڭ. بارلىق تىللارنى قوللايدۇ ھەمدە تاللانغان تىلنى ئاپتوماتىك چەكلىنىدۇ, ئۇنى توركۆرگۈنىڭ سۈكۈتتىكى ھالەتتە تەرجىمە قىلىدۇ. ئاددىي, تېز ۋە ئۈنۈملۈك.
+// @description:uk    Миттєво перекладіть виділений текст за допомогою Ctrl+L. Підтримує всі мови та автоматично визначає вибрану мову, перекладаючи її на мову вашого браузера за умовчанням. Просто, швидко та ефективно.
+// @description:vi    Dịch văn bản đã chọn ngay lập tức bằng Ctrl+L. Hỗ trợ tất cả các ngôn ngữ và tự động phát hiện ngôn ngữ đã chọn, dịch ngôn ngữ đó sang ngôn ngữ mặc định của trình duyệt của bạn. Đơn giản, nhanh chóng và hiệu quả.
+// @description:fr-CA Traduisez instantanément le texte sélectionné à l’aide de Ctrl+L. Prend en charge toutes les langues et détecte automatiquement la langue sélectionnée, la traduisant dans la langue par défaut de votre navigateur. Simple, rapide et efficace.
+// @description:ckb   Nivîsara hilbijartî yekser bi karanîna Ctrl+L wergerîne. Hemî zimanan piştgirî dike û bixweber zimanê hilbijartî tespît dike, wî werdigerîne zimanê xwerû yê geroka we. Hêsan, zû û bikêrhatî.
+// @description:es-419 Traduce instantáneamente el texto seleccionado usando Ctrl+L. Admite todos los idiomas y detecta automáticamente el idioma seleccionado, traduciéndolo al idioma predeterminado de tu navegador. Simple, rápido y eficiente.
 
+// @namespace    https://github.com/DREwX-code
 // @author       Dℝ∃wX
-// @copyright    2025 DℝᴇwX
+// @copyright    2025 Dℝ∃wX
 // @license      Apache-2.0
-// @match        *://*/*
+// @require      https://update.greasyfork.org/scripts/556911/1702254/UTST%20Translation%20Library.js
 // @grant        GM_xmlhttpRequest
-// @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_addStyle
 // @connect      translate.googleapis.com
+// @match        *://*/*
+// @run-at       document-start
+// @version      1.3.5
+// @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
 // @tag          translation
 // @tag          text selection
 // @tag          translate
@@ -39,8 +106,8 @@
 // @tag          accessibility
 // @tag          language
 // @tag          multilingual
-// @grant        GM_getValue
-// @grant        GM_setValue
+
+
 
 // ==/UserScript==
 
@@ -65,264 +132,50 @@ limitations under the License.
 (function () {
     'use strict';
 
+    GM_addStyle(`
+#closeButton:hover svg {
+    stroke: #ff0000 !important;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+.utst-scroll {
+    scrollbar-width: thin !important;
+    scrollbar-color: #4A90E2 rgba(20,20,20,0.4) !important;
+}
+
+.utst-scroll::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+.utst-scroll::-webkit-scrollbar-track {
+    background: rgba(20,20,20,0.4) !important;
+}
+
+.utst-scroll::-webkit-scrollbar-thumb {
+    background: #4A90E2 !important;
+    border-radius: 4px !important;
+}
+
+.utst-scroll::-webkit-scrollbar-thumb:hover {
+    background: #6AB0FF !important;
+}
+`);
+
+
+    const translationLibrary = (typeof window !== 'undefined' ? window.TraductionOutilTranslator : null)
+        || (typeof globalThis !== 'undefined' ? globalThis.TraductionOutilTranslator : null);
+    if (!translationLibrary || !translationLibrary.languageNames) {
+        console.error('[Ultimate Translator] Missing TraductionOutilTranslator language library.');
+        return;
+    }
+
     const browserLang = navigator.language.split('-')[0];
-    const supportedUiLanguages = ['en', 'fr', 'es', 'de', 'it', 'pt', 'ru', 'zh-CN', 'ja'];
-
-    const languageNames = {
-        'en': {
-            'auto': 'Detect',
-            'en': 'English',
-            'fr': 'French',
-            'es': 'Spanish',
-            'de': 'German',
-            'it': 'Italian',
-            'pt': 'Portuguese',
-            'ru': 'Russian',
-            'zh-CN': 'Chinese (Simplified)',
-            'ja': 'Japanese',
-            'errors': {
-                'noText': 'No text selected',
-                'translation': 'Translation error',
-                'connection': 'Connection error'
-            },
-            'tooltips': {
-                'listenTranslated': 'Listen to translated text',
-                'listenOriginal': 'Listen to original text'
-            },
-            'overlay': {
-                'title': 'Fullscreen Translator',
-                'source': 'Source text',
-                'target': 'Translated text',
-                'translate': 'Translate',
-                'open': 'Fullscreen',
-                'sourceLangLabel': 'Source language',
-                'targetLangLabel': 'Target language'
-            },
-            'dragHandleLabel': 'Move',
-            'settingsTitle': 'Settings',
-            'settingsDefaultLabel': 'Default translation language:',
-            'settingsToolLabel': 'Tool language:',
-            'navigator': 'Browser language',
-        },
-        'fr': {
-            'auto': 'Détecter',
-            'en': 'Anglais',
-            'fr': 'Français',
-            'es': 'Espagnol',
-            'de': 'Allemand',
-            'it': 'Italien',
-            'pt': 'Portugais',
-            'ru': 'Russe',
-            'zh-CN': 'Chinois (Simplifié)',
-            'ja': 'Japonais',
-            'errors': {
-                'noText': 'Aucun texte sélectionné',
-                'translation': 'Erreur de traduction',
-                'connection': 'Erreur de connexion'
-            },
-            'tooltips': {
-                'listenTranslated': 'Écoute le texte traduit',
-                'listenOriginal': 'Écoute le texte original'
-            },
-            'overlay': {
-                'title': 'Traduction plein écran',
-                'source': 'Texte source',
-                'target': 'Texte traduit',
-                'translate': 'Traduire',
-                'open': 'Plein écran',
-                'sourceLangLabel': 'Langue source',
-                'targetLangLabel': 'Langue cible'
-            },
-            'dragHandleLabel': 'Déplacer',
-            'settingsTitle': 'Paramètres',
-            'settingsDefaultLabel': 'Langue de traduction par défaut :',
-            'settingsToolLabel': "Langue de l'outil :",
-            'navigator': 'Langue du navigateur',
-
-        },
-        'es': {
-            'auto': 'Detectar',
-            'en': 'Inglés',
-            'fr': 'Francés',
-            'es': 'Español',
-            'de': 'Alemán',
-            'it': 'Italiano',
-            'pt': 'Portugués',
-            'ru': 'Ruso',
-            'zh-CN': 'Chino (Simplificado)',
-            'ja': 'Japonés',
-            'errors': {
-                'noText': 'No hay texto seleccionado',
-                'translation': 'Error de traducción',
-                'connection': 'Error de conexión'
-            },
-            'tooltips': {
-                'listenTranslated': 'Escuchar el texto traducido',
-                'listenOriginal': 'Escuchar el texto original'
-            },
-            'dragHandleLabel': 'Mover',
-            'settingsTitle': 'Configuración',
-            'settingsDefaultLabel': 'Idioma de traducción predeterminado:',
-            'settingsToolLabel': 'Idioma de la interfaz:',
-            'navigator': 'Idioma del navegador',
-        },
-        'de': {
-            'auto': 'Erkennen',
-            'en': 'Englisch',
-            'fr': 'Französisch',
-            'es': 'Spanisch',
-            'de': 'Deutsch',
-            'it': 'Italienisch',
-            'pt': 'Portugiesisch',
-            'ru': 'Russisch',
-            'zh-CN': 'Chinesisch (Vereinfacht)',
-            'ja': 'Japanisch',
-            'errors': {
-                'noText': 'Kein Text ausgewählt',
-                'translation': 'Übersetzungsfehler',
-                'connection': 'Verbindungsfehler'
-            },
-            'tooltips': {
-                'listenTranslated': 'Übersetzten Text anhören',
-                'listenOriginal': 'Originaltext anhören'
-            },
-            'dragHandleLabel': 'Verschieben',
-            'settingsTitle': 'Einstellungen',
-            'settingsDefaultLabel': 'Standardübersetzungssprache:',
-            'settingsToolLabel': 'Werkzeugsprache:',
-            'navigator': 'Browser-Sprache',
-        },
-        'it': {
-            'auto': 'Rileva',
-            'en': 'Inglese',
-            'fr': 'Francese',
-            'es': 'Spagnolo',
-            'de': 'Tedesco',
-            'it': 'Italiano',
-            'pt': 'Portoghese',
-            'ru': 'Russo',
-            'zh-CN': 'Cinese (Semplificato)',
-            'ja': 'Giapponese',
-            'errors': {
-                'noText': 'Nessun testo selezionato',
-                'translation': 'Errore di traduzione',
-                'connection': 'Errore di connessione'
-            },
-            'tooltips': {
-                'listenTranslated': 'Ascolta il testo tradotto',
-                'listenOriginal': 'Ascolta il testo originale'
-            },
-            'dragHandleLabel': 'Spostare',
-            'settingsTitle': 'Impostazioni',
-            'settingsDefaultLabel': 'Lingua di traduzione predefinita:',
-            'settingsToolLabel': "Lingua dell'interfaccia:",
-            'navigator': 'Lingua del browser',
-        },
-        'pt': {
-            'auto': 'Detectar',
-            'en': 'Inglês',
-            'fr': 'Francês',
-            'es': 'Espanhol',
-            'de': 'Alemão',
-            'it': 'Italiano',
-            'pt': 'Português',
-            'ru': 'Russo',
-            'zh-CN': 'Chinês (Simplificado)',
-            'ja': 'Japonês',
-            'errors': {
-                'noText': 'Nenhum texto selecionado',
-                'translation': 'Erro de tradução',
-                'connection': 'Erro de conexão'
-            },
-            'tooltips': {
-                'listenTranslated': 'Ouvir o texto traduzido',
-                'listenOriginal': 'Ouvir o texto original'
-            },
-            'dragHandleLabel': 'Mover',
-            'settingsTitle': 'Configurações',
-            'settingsDefaultLabel': 'Idioma de tradução padrão:',
-            'settingsToolLabel': 'Idioma da interface:',
-            'navigator': 'Idioma do navegador',
-        },
-        'ru': {
-            'auto': 'Определить',
-            'en': 'Английский',
-            'fr': 'Французский',
-            'es': 'Испанский',
-            'de': 'Немецкий',
-            'it': 'Итальянский',
-            'pt': 'Португальский',
-            'ru': 'Русский',
-            'zh-CN': 'Китайский (упрощённый)',
-            'ja': 'Японский',
-            'errors': {
-                'noText': 'Текст не выделен',
-                'translation': 'Ошибка перевода',
-                'connection': 'Ошибка соединения'
-            },
-            'tooltips': {
-                'listenTranslated': 'Прослушать переведённый текст',
-                'listenOriginal': 'Прослушать оригинальный текст'
-            },
-            'dragHandleLabel': 'Переместить',
-            'settingsTitle': 'Настройки',
-            'settingsDefaultLabel': 'Язык перевода по умолчанию:',
-            'settingsToolLabel': 'Язык интерфейса:',
-            'navigator': 'Язык браузера',
-        },
-        'zh-CN': {
-            'auto': '检测',
-            'en': '英语',
-            'fr': '法语',
-            'es': '西班牙语',
-            'de': '德语',
-            'it': '意大利语',
-            'pt': '葡萄牙语',
-            'ru': '俄语',
-            'zh-CN': '中文（简体）',
-            'ja': '日语',
-            'errors': {
-                'noText': '未选择文本',
-                'translation': '翻译错误',
-                'connection': '连接错误'
-            },
-            'tooltips': {
-                'listenTranslated': '聆听翻译文本',
-                'listenOriginal': '聆听原文'
-            },
-            'dragHandleLabel': '移动',
-            'settingsTitle': '设置',
-            'settingsDefaultLabel': '默认翻译语言：',
-            'settingsToolLabel': '界面语言：',
-            'navigator': '浏览器语言',
-        },
-        'ja': {
-            'auto': '検出',
-            'en': '英語',
-            'fr': 'フランス語',
-            'es': 'スペイン語',
-            'de': 'ドイツ語',
-            'it': 'イタリア語',
-            'pt': 'ポルトガル語',
-            'ru': 'ロシア語',
-            'zh-CN': '中国語（簡体）',
-            'ja': '日本語',
-            'errors': {
-                'noText': 'テキストが選択されていません',
-                'translation': '翻訳エラー',
-                'connection': '接続エラー'
-            },
-            'tooltips': {
-                'listenTranslated': '翻訳されたテキストを聞く',
-                'listenOriginal': '元のテキストを聞く'
-            },
-            'dragHandleLabel': '移動',
-            'settingsTitle': '設定',
-            'settingsDefaultLabel': '既定の翻訳言語：',
-            'settingsToolLabel': 'ツールの言語：',
-            'navigator': 'ブラウザの言語',
-        }
-    };
+    const languageNames = translationLibrary.languageNames;
+    const englishLangNames = languageNames.en || {};
+    const supportedUiLanguages = Array.isArray(translationLibrary.supportedUiLanguages) && translationLibrary.supportedUiLanguages.length
+        ? translationLibrary.supportedUiLanguages
+        : Object.keys(languageNames);
 
     const storedToolLangPref = GM_getValue('defaultToolLang', 'browser');
     const normalizedToolLangPref = (storedToolLangPref === 'browser' || supportedUiLanguages.includes(storedToolLangPref))
@@ -351,17 +204,17 @@ limitations under the License.
     let settingsToolLabel = langNames.settingsToolLabel || languageNames.en.settingsToolLabel;
 
     const languages = [
-        { code: 'auto', name: langNames.auto },
-        { code: 'en', name: langNames.en },
-        { code: 'fr', name: langNames.fr },
-        { code: 'es', name: langNames.es },
-        { code: 'de', name: langNames.de },
-        { code: 'it', name: langNames.it },
-        { code: 'pt', name: langNames.pt },
-        { code: 'ru', name: langNames.ru },
-        { code: 'zh-CN', name: langNames['zh-CN'] },
-        { code: 'ja', name: langNames.ja },
-        { code: 'navigator', name: langNames.navigator }
+        { code: 'auto', name: englishLangNames.auto || langNames.auto },
+        { code: 'en', name: englishLangNames.en || 'English' },
+        { code: 'fr', name: englishLangNames.fr || 'French' },
+        { code: 'es', name: englishLangNames.es || 'Spanish' },
+        { code: 'de', name: englishLangNames.de || 'German' },
+        { code: 'it', name: englishLangNames.it || 'Italian' },
+        { code: 'pt', name: englishLangNames.pt || 'Portuguese' },
+        { code: 'ru', name: englishLangNames.ru || 'Russian' },
+        { code: 'zh-CN', name: englishLangNames['zh-CN'] || 'Chinese (Simplified)' },
+        { code: 'ja', name: englishLangNames.ja || 'Japanese' },
+        { code: 'navigator', name: englishLangNames.navigator || 'Browser language' }
     ];
 
     const googleTranslateLanguages = {
@@ -493,9 +346,9 @@ limitations under the License.
 
     function getLanguageLabel(code) {
         if (code === 'navigator') {
-            return langNames.navigator;
+            return englishLangNames.navigator || 'Browser language';
         }
-        return langNames[code] || googleTranslateLanguages[code] || code;
+        return englishLangNames[code] || googleTranslateLanguages[code] || code;
     }
 
     function buildTargetLanguageOptions(includeNavigator = false) {
@@ -528,9 +381,9 @@ limitations under the License.
 
     function getToolLanguageLabel(code) {
         if (code === 'browser') {
-            return langNames.navigator;
+            return englishLangNames.navigator || 'Browser language';
         }
-        return langNames[code] || languageNames.en[code] || code;
+        return englishLangNames[code] || languageNames.en[code] || code;
     }
 
     function buildToolLanguageOptionsHtml() {
@@ -555,31 +408,26 @@ limitations under the License.
 
     const translationBox = document.createElement('div');
     translationBox.style.cssText = `
-        position: absolute;
-        background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
-        color: #ffffff;
-        padding: 20px;
-        padding-top: 40px;
-        border-radius: 12px;
-        z-index: 9999;
-        display: none;
-        min-width:370px;
-        max-width: 420px;
-        min-height: 200px;
-        max-height: 260px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 14px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        #closeButton:hover svg {
-  stroke: #ff0000;
-  transform: scale(1.1);
-  transition: all 0.2s ease;
-}
-
-    `;
+    position: absolute;
+    background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
+    color: #ffffff;
+    padding: 20px;
+    padding-top: 40px;
+    border-radius: 12px;
+    z-index: 9999;
+    display: none;
+    min-width: 370px;
+    max-width: 420px;
+    min-height: 200px;
+    max-height: 260px;
+    overflow-y: auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+`;
     document.body.appendChild(translationBox);
 
 
@@ -607,7 +455,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             </svg>
         </div>
     </div>
-    <div id="settingsHeader" style="position: absolute; top: 34px; left: 8px; display:none; align-items: center; gap: 8px;">
+    <div id="settingsHeader" style="position: absolute; top: 34px; left: 8px; display:none; align-items: center; gap: 8px; cursor: default;">
         <div id="backButton" style="cursor: pointer;" title="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -686,14 +534,14 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
 <label for="defaultTranslateLang" style="color:#fff; font-size:14px; display:block; margin-bottom:4px;">
   ${settingsDefaultLabel}
 </label>
-<select id="defaultTranslateLang" style="display:block; width:100%; max-width:260px; margin:0 auto; padding:5px 6px; border-radius:6px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); font-size:13px;">
+<select id="defaultTranslateLang" style="display:block; width:100%; max-width:260px; margin:0 auto; padding:5px 6px; border-radius:6px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); font-size:13px; cursor: pointer;">
   ${targetLanguageOptionsHtml}
 </select>
 
 <label for="toolLanguage" style="color:#fff; font-size:14px; display:block; margin:12px 0 4px;">
   ${settingsToolLabel}
 </label>
-<select id="toolLanguage" style="display:block; width:100%; max-width:260px; margin:0 auto; padding:5px 6px; border-radius:6px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); font-size:13px;">
+<select id="toolLanguage" style="display:block; width:100%; max-width:260px; margin:0 auto; padding:5px 6px; border-radius:6px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); font-size:13px; cursor: pointer;">
   ${toolLanguageOptionsHtml}
 </select>
 
@@ -702,6 +550,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
 
 
     `;
+    translationBox.classList.add("utst-scroll");
 
     const fullscreenOverlay = document.createElement('div');
     fullscreenOverlay.id = 'fullscreenOverlay';
@@ -719,7 +568,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
     fullscreenOverlay.innerHTML = `
       <div id="fullscreenPanel" style="width: min(1100px, 95vw); min-height: 40vh; background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%); color: #fff; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 32px rgba(0,0,0,0.45); padding: 22px 22px 16px; position: relative;">
         <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom: 14px;">
-            <div id="fullscreenTitle" style="font-size:16px; font-weight:700; letter-spacing:0.4px; color:#e7e9ff;">${overlayLabels.title}</div>
+            <div id="fullscreenTitle" style="font-size:16px; font-weight:700; letter-spacing:0.4px; color:#e7e9ff; cursor: default;">${overlayLabels.title}</div>
             <div id="fullscreenClose" style="cursor:pointer; width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:8px; transition: background 0.15s ease;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -803,8 +652,10 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
         </div>
       </div>
     `;
-
+    fullscreenOverlay.classList.add("utst-scroll");
     document.body.appendChild(fullscreenOverlay);
+
+
 
     const BOX_W = 420;
     const BOX_H = 260;
@@ -1484,7 +1335,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
         const selectedSrc = fullscreenSourceLangSelect ? fullscreenSourceLangSelect.value : 'auto';
         const langForSpeech = (selectedSrc && selectedSrc !== 'auto') ? selectedSrc
             : (detectedSourceLang && detectedSourceLang !== 'auto') ? detectedSourceLang
-            : (sourceLangSelect.value && sourceLangSelect.value !== 'auto' ? sourceLangSelect.value : browserLang);
+                : (sourceLangSelect.value && sourceLangSelect.value !== 'auto' ? sourceLangSelect.value : browserLang);
         speak(text, langForSpeech, 'fs-source');
     });
 
@@ -1499,13 +1350,13 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
     if (fullscreenSourceLangSearch) fullscreenSourceLangSearch.addEventListener('input', () => {
         renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
     });
-        if (fullscreenTargetLangSearch) fullscreenTargetLangSearch.addEventListener('input', () => {
-            renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
-        });
+    if (fullscreenTargetLangSearch) fullscreenTargetLangSearch.addEventListener('input', () => {
+        renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
+    });
 
-        if (fullscreenSource) fullscreenSource.addEventListener('input', () => scheduleFullscreenTranslate());
-        if (fullscreenSourceLangSelect) fullscreenSourceLangSelect.addEventListener('change', () => scheduleFullscreenTranslate(0));
-        if (fullscreenTargetLangSelect) fullscreenTargetLangSelect.addEventListener('change', () => scheduleFullscreenTranslate(0));
+    if (fullscreenSource) fullscreenSource.addEventListener('input', () => scheduleFullscreenTranslate());
+    if (fullscreenSourceLangSelect) fullscreenSourceLangSelect.addEventListener('change', () => scheduleFullscreenTranslate(0));
+    if (fullscreenTargetLangSelect) fullscreenTargetLangSelect.addEventListener('change', () => scheduleFullscreenTranslate(0));
 
     function swapFullscreenContent() {
         if (!fullscreenSource || !fullscreenTarget || !fullscreenSourceLangSelect || !fullscreenTargetLangSelect) return;
@@ -1609,6 +1460,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             <input class="inlineLangSearch" placeholder="${placeholder}" style="width:100%; max-width:100%; box-sizing:border-box; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none;" />
             <div class="inlineLangGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:6px; max-height:190px; overflow-y:auto; padding-top:8px;"></div>
         `;
+        panel.classList.add("utst-scroll");
         document.body.appendChild(panel);
         inlineLanguagePanels.push({ panel, selectEl });
         return panel;
@@ -1743,6 +1595,7 @@ transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             translationBox.style.top = `${window.innerHeight - rect.height - 10}px`;
         }
     }
+
 
     translationBox.addEventListener('transitionend', adjustBoxPosition);
 
