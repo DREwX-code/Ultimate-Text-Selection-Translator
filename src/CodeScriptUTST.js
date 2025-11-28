@@ -109,6 +109,8 @@
 
 
 
+// @downloadURL https://update.greasyfork.org/scripts/536284/Ultimate%20Text%20Selection%20Translator%20%E2%80%93%20Instantly%20Translate%20Any%20Selected%20Text.user.js
+// @updateURL https://update.greasyfork.org/scripts/536284/Ultimate%20Text%20Selection%20Translator%20%E2%80%93%20Instantly%20Translate%20Any%20Selected%20Text.meta.js
 // ==/UserScript==
 
 /*
@@ -131,6 +133,8 @@ limitations under the License.
 
 (function () {
     'use strict';
+
+    function bootstrap() {
 
     GM_addStyle(`
 #closeButton:hover svg {
@@ -1601,4 +1605,11 @@ limitations under the License.
 
     window.addEventListener('scroll', updateInlinePanelsPosition, true);
     window.addEventListener('resize', updateInlinePanelsPosition);
+    }
+
+    if (document.body) {
+        bootstrap();
+    } else {
+        window.addEventListener('DOMContentLoaded', bootstrap);
+    }
 })();
