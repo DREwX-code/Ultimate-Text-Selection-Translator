@@ -1,5 +1,4 @@
-# Ultimate-Text-Selection-Translator
-
+# UTST Userscript
 [![GreasyFork installs](https://img.shields.io/greasyfork/dt/536284?style=flat-square&label=installs&color=3b82f6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
 [![GreasyFork version](https://img.shields.io/greasyfork/v/536284?style=flat-square&label=version&color=8b5cf6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/versions)
 [![GitHub license](https://img.shields.io/github/license/DREwX-code/Ultimate-Text-Selection-Translator?style=flat-square)](./LICENSE)
