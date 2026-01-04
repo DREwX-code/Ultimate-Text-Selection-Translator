@@ -8,7 +8,7 @@
 Ultimate Text Selection Translator
 </a></strong>
 is a powerful Tampermonkey userscript that allows you to instantly translate any selected text on any website using a simple keyboard shortcut.
-No copy-paste, no external tools — translation happens directly on the page.
+No copy-paste, no external tools : translation happens directly on the page.
 </p>
 
 ## Features
@@ -48,7 +48,7 @@ here
 
 <p>
 Feedback, bug reports, and improvement suggestions are welcome via
-<a href="https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/feedback">
+<a href="https://greasyfork.org/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/feedback">
 GreasyFork feedback
 </a>
 or
