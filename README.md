@@ -3,6 +3,7 @@
 [![GreasyFork installs](https://img.shields.io/greasyfork/dt/536284?style=flat-square&label=installs&color=3b82f6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
 [![GreasyFork version](https://img.shields.io/greasyfork/v/536284?style=flat-square&label=version&color=8b5cf6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/versions)
 [![GitHub license](https://img.shields.io/github/license/DREwX-code/Ultimate-Text-Selection-Translator?style=flat-square)](./LICENSE)
+[![CodeFactor](https://img.shields.io/codefactor/grade/github/DREwX-code/neuraveil?style=flat-square&label=Code%20quality&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/drewx-code/ultimate-text-selection-translator)
 <p>
 <strong><a href="https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text">
 Ultimate Text Selection Translator
