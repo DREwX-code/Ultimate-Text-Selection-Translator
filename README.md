@@ -3,7 +3,6 @@
 [![GreasyFork installs](https://img.shields.io/greasyfork/dt/536284?style=flat-square&label=installs&color=3b82f6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
 [![GreasyFork version](https://img.shields.io/greasyfork/v/536284?style=flat-square&label=version&color=8b5cf6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/versions)
 [![GitHub license](https://img.shields.io/github/license/DREwX-code/Ultimate-Text-Selection-Translator?style=flat-square)](./LICENSE)
-
 <p>
 <strong><a href="https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text">
 Ultimate Text Selection Translator
@@ -11,24 +10,52 @@ Ultimate Text Selection Translator
 is a powerful Tampermonkey userscript that allows you to instantly translate any selected text on any website using a simple keyboard shortcut.
 No copy-paste, no external tools : translation happens directly on the page.
 </p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/UTST_poster.png" 
+       alt="Ultimate Text Selection Translator Poster" 
+       width="100%">
+</p>
+
 
 ## Features
 
+<h3>Translation</h3>
 <ul>
-  <li>Instant translation of any selected text using <strong>Ctrl + L</strong></li>
+  <li>Instant translation of any selected text using <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong></li>
   <li>Automatic source language detection</li>
   <li>Translation into the browser’s default language</li>
-  <li>Works on all websites without configuration</li>
-  <li>Fast and lightweight, optimized for smooth browsing</li>
-  <li>Designed to boost productivity and reading comfort</li>
+  <li>One-click translation button directly on text selection</li>
 </ul>
+
+<h3>Listening System</h3>
+<ul>
+  <li>Integrated text-to-speech for translated content</li>
+  <li>Stable audio playback with instant stop control</li>
+</ul>
+
+<h3>Customization</h3>
+<ul>
+  <li>Global theme system (Blue, Dark, Light)</li>
+  <li>Per-site control with built-in blacklist</li>
+</ul>
+
+<h3>Performance</h3>
+<ul>
+  <li>Works on all websites without configuration</li>
+  <li>Fast, lightweight, and optimized for smooth browsing</li>
+</ul>
+
 
 ## Usage
 
 <p>
-Select any text on a webpage, then press <strong>Ctrl + L</strong>.
-The translation appears instantly without leaving the page.
+Select any text on a webpage and press <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong> to instantly translate it without leaving the page.
 </p>
+
+<p>
+You can also use the automatic selection button that appears at the end of highlighted text for one-click translation. This feature can be disabled globally or per-site from the settings.
+</p>
+
 
 ## Installation
 
@@ -39,11 +66,16 @@ here
 </a>.
 </p>
 
-## Project information
+## Technical Information
 
 <p>
 <strong>Ultimate Text Selection Translator</strong> was created on <strong>May 17, 2025</strong>.
 </p>
+
+<p>
+The script uses <code>translate.googleapis.com</code> to process translation requests.
+</p>
+
 
 ## Feedback and contributions
 
