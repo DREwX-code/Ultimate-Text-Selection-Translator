@@ -41,51 +41,51 @@
 // @name:ckb         Ultimate Text Selection Translator – Her Nivîsarek Hilbijartî tavilê Wergerîne
 // @name:es-419      Ultimate Text Selection Translator – Traduce instantáneamente cualquier texto seleccionado
 
-// @description       Translate selected text instantly using Ctrl+L. Supports all languages and automatically detects the selected language, translating it into your browser's default language. Simple, fast, and efficient.
-// @description:fr    Traduisez instantanément le texte sélectionné à l’aide de Ctrl+L. Prend en charge toutes les langues et détecte automatiquement la langue sélectionnée, la traduisant dans la langue par défaut de votre navigateur. Simple, rapide et efficace.
-// @description:es    Traduce el texto seleccionado al instante usando Ctrl+L. Admite todos los idiomas y detecta automáticamente el idioma seleccionado, traduciéndolo al idioma predeterminado de su navegador. Sencillo, rápido y eficiente.
-// @description:de    Übersetzen Sie den ausgewählten Text sofort mit Strg+L. Unterstützt alle Sprachen, erkennt die ausgewählte Sprache automatisch und übersetzt sie in die Standardsprache Ihres Browsers. Einfach, schnell und effizient.
-// @description:ru    Мгновенно переводите выделенный текст с помощью Ctrl+L. Поддерживает все языки и автоматически определяет выбранный язык, переводя его на язык вашего браузера по умолчанию. Просто, быстро и эффективно.
-// @description:zh-CN 使用 Ctrl+L 立即翻译所选文本。支持所有语言并自动检测所选语言，将其翻译为浏览器的默认语言。简单、快速、高效。
-// @description:zh-TW 使用 Ctrl+L 立即翻譯所選文本。支持所有語言並自動檢測所選語言，將其翻譯為瀏覽器的默認語言。簡單、快速、高效。
-// @description:ja    Ctrl+L を使用して、選択したテキストを即座に翻訳します。すべての言語をサポートし、選択した言語を自動的に検出し、ブラウザのデフォルト言語に翻訳します。シンプル、高速、効率的です。
-// @description:pt    Traduza o texto selecionado instantaneamente usando Ctrl+L. Suporta todos os idiomas e detecta automaticamente o idioma selecionado, traduzindo-o para o idioma padrão do seu navegador. Simples, rápido e eficiente.
-// @description:it    Traduci istantaneamente il testo selezionato utilizzando Ctrl+L. Supporta tutte le lingue e rileva automaticamente la lingua selezionata, traducendola nella lingua predefinita del tuo browser. Semplice, veloce ed efficiente.
-// @description:ar    ترجمة النص المحدد على الفور باستخدام Ctrl+L. يدعم جميع اللغات ويكتشف اللغة المحددة تلقائيًا، ويترجمها إلى اللغة الافتراضية للمتصفح الخاص بك. بسيطة وسريعة وفعالة.
-// @description:be    Перакладзіце вылучаны тэкст імгненна, выкарыстоўваючы Ctrl+L. Падтрымлівае ўсе мовы і аўтаматычна вызначае выбраную мову, перакладаючы яе на мову вашага браўзера па змаўчанні. Проста, хутка і эфектыўна.
-// @description:bg    Превеждайте незабавно избрания текст с помощта на Ctrl+L. Поддържа всички езици и автоматично открива избрания език, превеждайки го на езика по подразбиране на вашия браузър. Просто, бързо и ефективно.
-// @description:cs    Okamžitě přeložte vybraný text pomocí Ctrl+L. Podporuje všechny jazyky a automaticky detekuje vybraný jazyk a překládá jej do výchozího jazyka vašeho prohlížeče. Jednoduché, rychlé a efektivní.
-// @description:da    Oversæt valgt tekst øjeblikkeligt ved hjælp af Ctrl+L. Understøtter alle sprog og registrerer automatisk det valgte sprog og oversætter det til din browsers standardsprog. Enkel, hurtig og effektiv.
-// @description:el    Μεταφράστε το επιλεγμένο κείμενο άμεσα χρησιμοποιώντας Ctrl+L. Υποστηρίζει όλες τις γλώσσες και εντοπίζει αυτόματα την επιλεγμένη γλώσσα, μεταφράζοντάς την στην προεπιλεγμένη γλώσσα του προγράμματος περιήγησής σας. Απλό, γρήγορο και αποτελεσματικό.
-// @description:eo    Traduku elektitan tekston tuj uzante Ctrl+L. Subtenas ĉiujn lingvojn kaj aŭtomate detektas la elektitan lingvon, tradukante ĝin al la defaŭlta lingvo de via retumilo. Simpla, rapida kaj efika.
-// @description:fi    Käännä valittu teksti välittömästi painamalla Ctrl+L. Tukee kaikkia kieliä ja tunnistaa automaattisesti valitun kielen kääntäen sen selaimesi oletuskielelle. Yksinkertaista, nopeaa ja tehokasta.
-// @description:he    תרגם טקסט נבחר באופן מיידי באמצעות Ctrl+L. תומך בכל השפות ומזהה אוטומטית את השפה הנבחרת, ומתרגם אותה לשפת ברירת המחדל של הדפדפן שלך. פשוט, מהיר ויעיל.
-// @description:hr    Trenutačno prevedite odabrani tekst pomoću Ctrl+L. Podržava sve jezike i automatski otkriva odabrani jezik, prevodeći ga na zadani jezik vašeg preglednika. Jednostavno, brzo i učinkovito.
-// @description:hu    A kijelölt szöveget azonnal lefordíthatja a Ctrl+L billentyűkombinációval. Támogatja az összes nyelvet, és automatikusan felismeri a kiválasztott nyelvet, lefordítva azt a böngésző alapértelmezett nyelvére. Egyszerű, gyors és hatékony.
-// @description:id    Terjemahkan teks yang dipilih secara instan menggunakan Ctrl+L. Mendukung semua bahasa dan secara otomatis mendeteksi bahasa yang dipilih, menerjemahkannya ke bahasa default browser Anda. Sederhana, cepat, dan efisien.
-// @description:ka    შერჩეული ტექსტის თარგმნა მყისიერად Ctrl+L-ის გამოყენებით. მხარს უჭერს ყველა ენას და ავტომატურად ამოიცნობს არჩეულ ენას, თარგმნის მას თქვენი ბრაუზერის ნაგულისხმევ ენაზე. მარტივი, სწრაფი და ეფექტური.
-// @description:ko    Ctrl+L을 사용하여 선택한 텍스트를 즉시 번역하세요. 모든 언어를 지원하고 선택한 언어를 자동으로 감지하여 브라우저의 기본 언어로 번역합니다. 간단하고 빠르며 효율적입니다.
-// @description:mr    Ctrl+L वापरून निवडलेल्या मजकुराचे झटपट भाषांतर करा. सर्व भाषांना सपोर्ट करते आणि निवडलेली भाषा आपोआप ओळखते, ती तुमच्या ब्राउझरच्या डीफॉल्ट भाषेत अनुवादित करते. साधे, जलद आणि कार्यक्षम.
-// @description:nl    Vertaal geselecteerde tekst onmiddellijk met Ctrl+L. Ondersteunt alle talen en detecteert automatisch de geselecteerde taal en vertaalt deze naar de standaardtaal van uw browser. Eenvoudig, snel en efficiënt.
-// @description:nb    Oversett valgt tekst umiddelbart ved å bruke Ctrl+L. Støtter alle språk og oppdager automatisk det valgte språket, og oversetter det til nettleserens standardspråk. Enkelt, raskt og effektivt.
-// @description:pl    Przetłumacz zaznaczony tekst natychmiast, używając Ctrl+L. Obsługuje wszystkie języki i automatycznie wykrywa wybrany język, tłumacząc go na domyślny język Twojej przeglądarki. Prosto, szybko i skutecznie.
-// @description:pt-BR Traduza o texto selecionado instantaneamente usando Ctrl+L. Suporta todos os idiomas e detecta automaticamente o idioma selecionado, traduzindo-o para o idioma padrão do seu navegador. Simples, rápido e eficiente.
-// @description:ro    Traduceți textul selectat instantaneu folosind Ctrl+L. Acceptă toate limbile și detectează automat limba selectată, traducând-o în limba implicită a browserului. Simplu, rapid și eficient.
-// @description:sk    Preložte vybraný text okamžite pomocou Ctrl+L. Podporuje všetky jazyky a automaticky rozpozná vybraný jazyk a preloží ho do predvoleného jazyka prehliadača. Jednoduché, rýchle a efektívne.
-// @description:sr    Одмах преведите изабрани текст користећи Цтрл+Л. Подржава све језике и аутоматски детектује изабрани језик, преводећи га на подразумевани језик вашег претраживача. Једноставно, брзо и ефикасно.
-// @description:sv    Översätt markerad text direkt med Ctrl+L. Stöder alla språk och upptäcker automatiskt det valda språket och översätter det till din webbläsares standardspråk. Enkelt, snabbt och effektivt.
-// @description:th    แปลข้อความที่เลือกทันทีโดยใช้ Ctrl+L รองรับทุกภาษาและตรวจจับภาษาที่เลือกโดยอัตโนมัติ โดยแปลเป็นภาษาเริ่มต้นของเบราว์เซอร์ของคุณ ง่าย รวดเร็ว และมีประสิทธิภาพ
-// @description:tr    Seçilen metni Ctrl+L tuşlarını kullanarak anında çevirin. Tüm dilleri destekler ve seçilen dili otomatik olarak algılayarak tarayıcınızın varsayılan diline çevirir. Basit, hızlı ve verimli.
-// @description:ug    تاللانغان تېكىستنى دەرھال CTRL + L ئارقىلىق تەرجىمە قىلىڭ. بارلىق تىللارنى قوللايدۇ ھەمدە تاللانغان تىلنى ئاپتوماتىك چەكلىنىدۇ, ئۇنى توركۆرگۈنىڭ سۈكۈتتىكى ھالەتتە تەرجىمە قىلىدۇ. ئاددىي, تېز ۋە ئۈنۈملۈك.
-// @description:uk    Миттєво перекладіть виділений текст за допомогою Ctrl+L. Підтримує всі мови та автоматично визначає вибрану мову, перекладаючи її на мову вашого браузера за умовчанням. Просто, швидко та ефективно.
-// @description:vi    Dịch văn bản đã chọn ngay lập tức bằng Ctrl+L. Hỗ trợ tất cả các ngôn ngữ và tự động phát hiện ngôn ngữ đã chọn, dịch ngôn ngữ đó sang ngôn ngữ mặc định của trình duyệt của bạn. Đơn giản, nhanh chóng và hiệu quả.
-// @description:fr-CA Traduisez instantanément le texte sélectionné à l’aide de Ctrl+L. Prend en charge toutes les langues et détecte automatiquement la langue sélectionnée, la traduisant dans la langue par défaut de votre navigateur. Simple, rapide et efficace.
-// @description:ckb   Nivîsara hilbijartî yekser bi karanîna Ctrl+L wergerîne. Hemî zimanan piştgirî dike û bixweber zimanê hilbijartî tespît dike, wî werdigerîne zimanê xwerû yê geroka we. Hêsan, zû û bikêrhatî.
-// @description:es-419 Traduce instantáneamente el texto seleccionado usando Ctrl+L. Admite todos los idiomas y detecta automáticamente el idioma seleccionado, traduciéndolo al idioma predeterminado de tu navegador. Simple, rápido y eficiente.
+// @description       Instantly translate selected text using the smart button or the Ctrl+L shortcut. Automatically detects the language and translates it into the language of your choice.
+// @description:fr    Traduisez instantanément le texte sélectionné grâce au bouton intelligent ou au raccourci Ctrl+L. Détection automatique de la langue et traduction immédiate dans la langue de votre choix.
+// @description:es    Traduce instantáneamente el texto seleccionado mediante el botón inteligente o el atajo Ctrl+L. Detecta automáticamente el idioma y lo traduce al idioma de tu elección.
+// @description:de    Übersetzen Sie ausgewählten Text sofort über die intelligente Schaltfläche oder die Tastenkombination Strg+L. Erkennt die Sprache automatisch und übersetzt sie in die Sprache Ihrer Wahl.
+// @description:ru    Мгновенно переводите выделенный текст с помощью умной кнопки или сочетания Ctrl+L. Автоматически определяет язык и переводит его на выбранный вами язык.
+// @description:zh-CN 使用智能按钮或 Ctrl+L 快捷键立即翻译所选文本。自动检测语言并将其翻译为您选择的语言。
+// @description:zh-TW 使用智慧按鈕或 Ctrl+L 快捷鍵立即翻譯所選文字。自動偵測語言並翻譯為您選擇的語言。
+// @description:ja    スマートボタンまたは Ctrl+L ショートカットで選択したテキストを即座に翻訳します。言語を自動検出し、選択した言語に翻訳します。
+// @description:pt    Traduza instantaneamente o texto selecionado usando o botão inteligente ou o atalho Ctrl+L. Detecta automaticamente o idioma e o traduz para o idioma de sua escolha.
+// @description:it    Traduci istantaneamente il testo selezionato tramite il pulsante intelligente o la scorciatoia Ctrl+L. Rileva automaticamente la lingua e la traduce nella lingua scelta.
+// @description:ar    ترجم النص المحدد فورًا باستخدام الزر الذكي أو اختصار Ctrl+L. يكتشف اللغة تلقائيًا ويترجمها إلى اللغة التي تختارها.
+// @description:be    Імгненна перакладайце вылучаны тэкст з дапамогай разумнай кнопкі або спалучэння Ctrl+L. Аўтаматычна вызначае мову і перакладае яе на мову па вашым выбары.
+// @description:bg    Превеждайте избрания текст незабавно чрез интелигентния бутон или клавишната комбинация Ctrl+L. Автоматично разпознава езика и го превежда на езика по ваш избор.
+// @description:cs    Okamžitě přeložte vybraný text pomocí chytrého tlačítka nebo zkratky Ctrl+L. Automaticky rozpozná jazyk a přeloží jej do vámi zvoleného jazyka.
+// @description:da    Oversæt valgt tekst med det samme ved hjælp af den smarte knap eller genvejen Ctrl+L. Registrerer automatisk sproget og oversætter det til det sprog, du vælger.
+// @description:el    Μεταφράστε άμεσα το επιλεγμένο κείμενο χρησιμοποιώντας το έξυπνο κουμπί ή τη συντόμευση Ctrl+L. Ανιχνεύει αυτόματα τη γλώσσα και τη μεταφράζει στη γλώσσα της επιλογής σας.
+// @description:eo    Traduku elektitan tekston tuj per la inteligenta butono aŭ la klavkombino Ctrl+L. Aŭtomate detektas la lingvon kaj tradukas ĝin al la lingvo laŭ via elekto.
+// @description:fi    Käännä valittu teksti välittömästi älypainikkeella tai Ctrl+L-pikanäppäimellä. Tunnistaa kielen automaattisesti ja kääntää sen valitsemaasi kieleen.
+// @description:he    תרגם טקסט נבחר באופן מיידי באמצעות הכפתור החכם או קיצור הדרך Ctrl+L. מזהה אוטומטית את השפה ומתרגם אותה לשפה שתבחר.
+// @description:hr    Odmah prevedite odabrani tekst pomoću pametnog gumba ili prečaca Ctrl+L. Automatski prepoznaje jezik i prevodi ga na jezik po vašem izboru.
+// @description:hu    Fordítsa le azonnal a kijelölt szöveget az intelligens gombbal vagy a Ctrl+L billentyűkombinációval. Automatikusan felismeri a nyelvet, és az Ön által választott nyelvre fordítja.
+// @description:id    Terjemahkan teks yang dipilih secara instan menggunakan tombol pintar atau pintasan Ctrl+L. Secara otomatis mendeteksi bahasa dan menerjemahkannya ke bahasa pilihan Anda.
+// @description:ka    შერჩეული ტექსტი მყისიერად თარგმნეთ ჭკვიანი ღილაკის ან Ctrl+L მალსახმობის გამოყენებით. ავტომატურად ამოიცნობს ენას და თარგმნის თქვენს მიერ არჩეულ ენაზე.
+// @description:ko    스마트 버튼 또는 Ctrl+L 단축키를 사용하여 선택한 텍스트를 즉시 번역하세요. 언어를 자동으로 감지하고 원하는 언어로 번역합니다.
+// @description:mr    स्मार्ट बटण किंवा Ctrl+L शॉर्टकट वापरून निवडलेला मजकूर त्वरित भाषांतरित करा. भाषा आपोआप ओळखते आणि तुमच्या निवडीच्या भाषेत अनुवादित करते.
+// @description:nl    Vertaal geselecteerde tekst direct met de slimme knop of de sneltoets Ctrl+L. Detecteert automatisch de taal en vertaalt deze naar de taal van jouw keuze.
+// @description:nb    Oversett valgt tekst umiddelbart med den smarte knappen eller Ctrl+L-snarveien. Oppdager språket automatisk og oversetter det til språket du velger.
+// @description:pl    Natychmiast przetłumacz zaznaczony tekst za pomocą inteligentnego przycisku lub skrótu Ctrl+L. Automatycznie wykrywa język i tłumaczy go na wybrany przez Ciebie język.
+// @description:pt-BR Traduza instantaneamente o texto selecionado usando o botão inteligente ou o atalho Ctrl+L. Detecta automaticamente o idioma e o traduz para o idioma de sua escolha.
+// @description:ro    Traduceți instantaneu textul selectat folosind butonul inteligent sau combinația Ctrl+L. Detectează automat limba și o traduce în limba aleasă de dvs.
+// @description:sk    Okamžite preložte vybraný text pomocou inteligentného tlačidla alebo skratky Ctrl+L. Automaticky rozpozná jazyk a preloží ho do jazyka podľa vášho výberu.
+// @description:sr    Одмах преведите изабрани текст помоћу паметног дугмета или пречице Ctrl+L. Аутоматски препознаје језик и преводи га на језик по вашем избору.
+// @description:sv    Översätt markerad text direkt med den smarta knappen eller genvägen Ctrl+L. Identifierar automatiskt språket och översätter det till det språk du väljer.
+// @description:th    แปลข้อความที่เลือกทันทีด้วยปุ่มอัจฉริยะหรือคีย์ลัด Ctrl+L ระบบจะตรวจจับภาษาอัตโนมัติและแปลเป็นภาษาที่คุณเลือก
+// @description:tr    Seçilen metni akıllı düğme veya Ctrl+L kısayolu ile anında çevirin. Dili otomatik olarak algılar ve seçtiğiniz dile çevirir.
+// @description:ug    تاللانغان تېكىستنى ئەقلىي كۇنۇپكا ياكى Ctrl+L قىسقا يولى ئارقىلىق دەرھال تەرجىمە قىلىڭ. تىلنى ئاپتوماتىك بايقىپ، سىز تاللىغان تىلغا تەرجىمە قىلىدۇ.
+// @description:uk    Миттєво перекладіть виділений текст за допомогою розумної кнопки або поєднання Ctrl+L. Автоматично визначає мову та перекладає її на обрану вами мову.
+// @description:vi    Dịch ngay văn bản đã chọn bằng nút thông minh hoặc phím tắt Ctrl+L. Tự động phát hiện ngôn ngữ và dịch sang ngôn ngữ bạn chọn.
+// @description:fr-CA Traduisez instantanément le texte sélectionné grâce au bouton intelligent ou au raccourci Ctrl+L. Détection automatique de la langue et traduction immédiate dans la langue de votre choix.
+// @description:ckb   دەقە هەڵبژێردراوەکانت بە شێوەیەکی خێرا بە دوگمەی زیرەک یان Ctrl+L وەرگێڕە. زمان بە ئۆتۆماتیکی دەدۆزێتەوە و دەیگۆڕێتە سەر زمانی هەڵبژێردراوی تۆ.
+// @description:es-419 Traduce instantáneamente el texto seleccionado mediante el botón inteligente o el atajo Ctrl+L. Detecta automáticamente el idioma y lo traduce al idioma que elijas.
 
 // @namespace    https://github.com/DREwX-code
 // @author       Dℝ∃wX
-// @copyright    2025 Dℝ∃wX
+// @copyright    2025-2026 Dℝ∃wX
 // @license      Apache-2.0
 // @require      https://update.greasyfork.org/scripts/556911/1754127/UTST%20Translation%20Library.js
 // @grant        GM_xmlhttpRequest
@@ -95,7 +95,7 @@
 // @connect      translate.googleapis.com
 // @match        *://*/*
 // @run-at       document-start
-// @version      1.4.0
+// @version      1.4.1
 // @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
 // @tag          translation
 // @tag          text selection
@@ -244,6 +244,105 @@ limitations under the License.
                 pointer-events: none;
                 transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 font-family: 'Roboto', sans-serif;
+                box-sizing: border-box !important;
+            }
+
+            #utstTranslationBox,
+            #utstTranslationBox * {
+                box-sizing: border-box !important;
+            }
+
+            #utstTranslationBox,
+            #fullscreenOverlay,
+            #utstSelectionBubble,
+            .utst-inline-lang-panel {
+                font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+                font-size: 14px !important;
+                line-height: 1.35 !important;
+                letter-spacing: normal !important;
+                text-transform: none !important;
+                text-size-adjust: 100% !important;
+                -webkit-text-size-adjust: 100% !important;
+                direction: ltr !important;
+                writing-mode: horizontal-tb !important;
+                zoom: 1 !important;
+                isolation: isolate !important;
+            }
+
+            #fullscreenOverlay,
+            #fullscreenOverlay *,
+            #utstSelectionBubble,
+            #utstSelectionBubble *,
+            .utst-inline-lang-panel,
+            .utst-inline-lang-panel * {
+                box-sizing: border-box !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
+            }
+
+            #fullscreenOverlay {
+                overflow: auto !important;
+            }
+
+            #fullscreenPanel {
+                width: min(1100px, 95vw) !important;
+                max-width: 95vw !important;
+                max-height: 92vh !important;
+                overflow: auto !important;
+                box-sizing: border-box !important;
+            }
+
+            #fullscreenColumns {
+                min-width: 0 !important;
+            }
+
+            #fullscreenColumns > div {
+                min-width: 0 !important;
+            }
+
+            #fullscreenSource,
+            #fullscreenTarget,
+            #fullscreenSourceWrap,
+            #fullscreenTargetWrap {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            #fullscreenSource,
+            #fullscreenTarget {
+                min-height: 200px !important;
+                max-height: min(62vh, 560px) !important;
+                resize: vertical !important;
+                box-sizing: border-box !important;
+            }
+
+            #fullscreenSourceWrap,
+            #fullscreenTargetWrap {
+                box-sizing: border-box !important;
+            }
+
+            #utstTranslationBox {
+                width: min(420px, calc(100vw - 20px)) !important;
+                min-width: min(420px, calc(100vw - 20px)) !important;
+                max-width: min(420px, calc(100vw - 20px)) !important;
+            }
+
+            #utstTranslationBox select,
+            #utstTranslationBox option {
+                -webkit-appearance: menulist !important;
+                -moz-appearance: menulist !important;
+                appearance: auto !important;
+                background-image: none !important;
+                font-family: inherit !important;
+                font-size: 13px !important;
+                line-height: 1.2 !important;
+                color: #fff !important;
+            }
+
+            #utstTranslationBox select {
+                padding-right: 24px !important;
+                min-height: 30px !important;
             }
 
             #utstSelectionBubble.utst-visible {
@@ -484,6 +583,33 @@ limitations under the License.
                 background: linear-gradient(90deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.4) 48%, rgba(255, 255, 255, 0.14) 100%);
                 background-size: 180% 100%;
                 animation: utstLoaderShimmer 1.1s linear infinite;
+            }
+
+            html.utst-theme-dark .utst-modern-loader {
+                background: linear-gradient(135deg, rgba(10, 10, 10, 0.78) 0%, rgba(20, 20, 20, 0.78) 100%) !important;
+            }
+
+            html.utst-theme-dark .utst-modern-loader__card {
+                background: rgba(16, 16, 16, 0.74) !important;
+                border-color: rgba(255, 255, 255, 0.14) !important;
+                box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45) !important;
+            }
+
+            html.utst-theme-dark .utst-modern-loader__ring {
+                border-color: rgba(255, 255, 255, 0.16) !important;
+                border-top-color: #d0d0d0 !important;
+            }
+
+            html.utst-theme-dark .utst-modern-loader[data-mode="language"] .utst-modern-loader__ring {
+                border-top-color: #55c89a !important;
+            }
+
+            html.utst-theme-dark .utst-modern-loader__title {
+                color: rgba(245, 245, 245, 0.94) !important;
+            }
+
+            html.utst-theme-dark .utst-modern-loader__line {
+                background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.32) 50%, rgba(255, 255, 255, 0.1) 100%) !important;
             }
 
             @keyframes utstLoaderSpin {
@@ -1206,6 +1332,7 @@ limitations under the License.
         const translationBox = document.createElement('div');
         translationBox.id = 'utstTranslationBox';
         translationBox.style.cssText = `
+            all: initial;
             position: absolute;
             background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
             color: #ffffff;
@@ -1225,8 +1352,12 @@ limitations under the License.
             transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.1);
+            box-sizing: border-box;
+            line-height: 1.35;
+            direction: ltr;
+            text-align: left;
         `;
-                document.body.appendChild(translationBox);
+                document.documentElement.appendChild(translationBox);
 
 
                 translationBox.innerHTML = `
@@ -1398,6 +1529,7 @@ limitations under the License.
         const fullscreenOverlay = document.createElement('div');
         fullscreenOverlay.id = 'fullscreenOverlay';
         fullscreenOverlay.style.cssText = `
+        all: initial;
         position: fixed;
         inset: 0;
         display: none;
@@ -1407,6 +1539,7 @@ limitations under the License.
         backdrop-filter: blur(8px);
         z-index: 10001;
         padding: 18px;
+        box-sizing: border-box;
     `;
         fullscreenOverlay.innerHTML = `
       <div id="fullscreenPanel" style="width: min(1100px, 95vw); min-height: 40vh; background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%); color: #fff; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 32px rgba(0,0,0,0.45); padding: 22px 22px 16px; position: relative;">
@@ -1419,7 +1552,7 @@ limitations under the License.
                 </svg>
             </div>
         </div>
-        <div style="display:flex; gap: 16px; min-height: 280px; flex-wrap: wrap;">
+        <div id="fullscreenColumns" style="display:flex; gap: 16px; min-height: 280px; flex-wrap: wrap;">
             <div style="flex:1; min-width:280px; display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                     <label id="fullscreenSourceLabel" style="color:#cfd3ff; font-size:13px; font-weight:600; letter-spacing:0.2px;">${overlayLabels.source}</label>
@@ -1435,7 +1568,9 @@ limitations under the License.
                     </div>
                 </div>
                 <select id="fullscreenSourceLang" style="display:none;">${sourceLanguageOptionsHtml}</select>
-                <textarea id="fullscreenSource" style="flex:1; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
+                <div id="fullscreenSourceWrap" style="position:relative; flex:1; min-height:200px;">
+                    <textarea id="fullscreenSource" style="width:100%; height:100%; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
+                </div>
                 <div style="display:flex; gap:8px; margin-top:6px;">
                     <div id="fullscreenSourceCopy" style="width:38px; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; cursor:pointer; background: rgba(255,255,255,0.06);">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1507,7 +1642,7 @@ limitations under the License.
       </div>
     `;
         fullscreenOverlay.classList.add("utst-scroll");
-        document.body.appendChild(fullscreenOverlay);
+        document.documentElement.appendChild(fullscreenOverlay);
 
         const selectionBubble = document.createElement('div');
         selectionBubble.id = 'utstSelectionBubble';
@@ -1529,7 +1664,7 @@ limitations under the License.
         <button id="utstBubbleHideGlobal" class="utst-bubble-menu-btn" type="button">${langNames.bubble.hideGlobal}</button>
       </div>
     `;
-        document.body.appendChild(selectionBubble);
+        document.documentElement.appendChild(selectionBubble);
 
         const selectionBubbleClose = selectionBubble.querySelector('#utstSelectionBubbleClose');
         const selectionBubbleAction = selectionBubble.querySelector('#utstSelectionBubbleAction');
@@ -1623,6 +1758,20 @@ limitations under the License.
         }
 
         document.addEventListener('mousemove', (e) => {
+            if (fullscreenTextareaResizePending && fullscreenOverlay.style.display === 'flex' && fullscreenTextareaResizeActive) {
+                if (!fullscreenTextareaResizeRaf) {
+                    fullscreenTextareaResizeRaf = requestAnimationFrame(() => {
+                        fullscreenTextareaResizeRaf = 0;
+                        if (!fullscreenTextareaResizePending || !fullscreenTextareaResizeActive) return;
+                        const liveHeight = Math.round(fullscreenTextareaResizeActive.getBoundingClientRect().height || 0);
+                        if (liveHeight > 0 && Math.abs(liveHeight - fullscreenTextareaLastSyncedHeight) >= 1) {
+                            syncFullscreenTextareaHeights(liveHeight);
+                            fullscreenTextareaLastSyncedHeight = liveHeight;
+                        }
+                    });
+                }
+            }
+
             if (!isDragging) return;
             const newLeft = dragStartLeft + (e.clientX - dragStartMouseX);
             const newTop = dragStartTop + (e.clientY - dragStartMouseY);
@@ -1687,6 +1836,8 @@ limitations under the License.
         const fullscreenSwap = fullscreenOverlay.querySelector('#fullscreenSwap');
         const fullscreenSource = fullscreenOverlay.querySelector('#fullscreenSource');
         const fullscreenTarget = fullscreenOverlay.querySelector('#fullscreenTarget');
+        const fullscreenSourceWrap = fullscreenOverlay.querySelector('#fullscreenSourceWrap');
+        const fullscreenTargetWrap = fullscreenOverlay.querySelector('#fullscreenTargetWrap');
         const fullscreenLoadingOverlay = fullscreenOverlay.querySelector('#utstFullscreenLoading');
         const fullscreenLoadingTitle = fullscreenOverlay.querySelector('#utstFullscreenLoadingTitle');
         const fullscreenSourceCopy = fullscreenOverlay.querySelector('#fullscreenSourceCopy');
@@ -1694,6 +1845,47 @@ limitations under the License.
         const fullscreenTargetCopy = fullscreenOverlay.querySelector('#fullscreenTargetCopy');
         const fullscreenTargetSpeak = fullscreenOverlay.querySelector('#fullscreenTargetSpeak');
         const fullscreenToggle = translationBox.querySelector('#fullscreenToggle');
+
+        let fullscreenTextareaResizePending = false;
+        let fullscreenTextareaResizeStartHeight = 0;
+        let fullscreenTextareaResizeActive = null;
+        let fullscreenTextareaResizeRaf = 0;
+        let fullscreenTextareaLastSyncedHeight = 0;
+
+        function getFullscreenTextareaBounds() {
+            const minHeight = 200;
+            const maxByViewport = Math.floor(window.innerHeight * 0.62);
+            const maxHeight = Math.max(minHeight, Math.min(560, maxByViewport));
+            return { minHeight, maxHeight };
+        }
+
+        function syncFullscreenTextareaHeights(preferredHeight = null) {
+            if (!fullscreenSource || !fullscreenTarget) return;
+            const { minHeight, maxHeight } = getFullscreenTextareaBounds();
+            const sourceHeight = Math.round(fullscreenSource.getBoundingClientRect().height || minHeight);
+            const targetHeight = Math.round(fullscreenTarget.getBoundingClientRect().height || minHeight);
+            const rawHeight = Number.isFinite(preferredHeight) && preferredHeight > 0
+                ? preferredHeight
+                : Math.max(sourceHeight, targetHeight, minHeight);
+            const clampedHeight = Math.max(minHeight, Math.min(maxHeight, Math.round(rawHeight)));
+
+            fullscreenSource.style.minHeight = `${minHeight}px`;
+            fullscreenTarget.style.minHeight = `${minHeight}px`;
+            fullscreenSource.style.maxHeight = `${maxHeight}px`;
+            fullscreenTarget.style.maxHeight = `${maxHeight}px`;
+            fullscreenSource.style.height = `${clampedHeight}px`;
+            fullscreenTarget.style.height = `${clampedHeight}px`;
+            if (fullscreenSourceWrap) {
+                fullscreenSourceWrap.style.height = `${clampedHeight}px`;
+                fullscreenSourceWrap.style.minHeight = `${minHeight}px`;
+                fullscreenSourceWrap.style.maxHeight = `${maxHeight}px`;
+            }
+            if (fullscreenTargetWrap) {
+                fullscreenTargetWrap.style.height = `${clampedHeight}px`;
+                fullscreenTargetWrap.style.minHeight = `${minHeight}px`;
+                fullscreenTargetWrap.style.maxHeight = `${maxHeight}px`;
+            }
+        }
 
         sourceLangSelect.value = 'auto';
 
@@ -3066,12 +3258,21 @@ limitations under the License.
             refreshLanguagePanelTheme();
             renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
             renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
+            syncFullscreenTextareaHeights();
             scheduleFullscreenTranslate(0, 'translate');
         }
 
         function closeFullscreenOverlay() {
             fullscreenTranslateRequestId++;
             setFullscreenLoading(false);
+            fullscreenTextareaResizePending = false;
+            fullscreenTextareaResizeActive = null;
+            fullscreenTextareaResizeStartHeight = 0;
+            fullscreenTextareaLastSyncedHeight = 0;
+            if (fullscreenTextareaResizeRaf) {
+                cancelAnimationFrame(fullscreenTextareaResizeRaf);
+                fullscreenTextareaResizeRaf = 0;
+            }
             fullscreenOverlay.style.display = 'none';
             unlockPageScrollForFullscreen();
             stopSpeaking();
@@ -3245,6 +3446,21 @@ limitations under the License.
             renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
         });
 
+        function markFullscreenResizeStart(e) {
+            if (!e || !e.currentTarget) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            if (!rect || !rect.height) return;
+            const resizeZone = 18;
+            const isNearBottom = (rect.bottom - e.clientY) <= resizeZone;
+            if (!isNearBottom) return;
+            fullscreenTextareaResizePending = true;
+            fullscreenTextareaResizeActive = e.currentTarget;
+            fullscreenTextareaResizeStartHeight = Math.round(rect.height);
+            fullscreenTextareaLastSyncedHeight = fullscreenTextareaResizeStartHeight;
+        }
+
+        if (fullscreenSource) fullscreenSource.addEventListener('pointerdown', markFullscreenResizeStart);
+        if (fullscreenTarget) fullscreenTarget.addEventListener('pointerdown', markFullscreenResizeStart);
         if (fullscreenSource) fullscreenSource.addEventListener('input', () => scheduleFullscreenTranslate(250, 'translate'));
         if (fullscreenSourceLangSelect) fullscreenSourceLangSelect.addEventListener('change', () => {
             if (fullscreenSourceLangSelect.value !== 'auto') {
@@ -3367,6 +3583,7 @@ limitations under the License.
         function buildInlinePanel(selectEl, placeholder = langNames.navigator) {
             const panel = document.createElement('div');
             panel.style.cssText = `
+            all: initial;
             display:none;
             position: absolute;
             width: 280px;
@@ -3386,7 +3603,7 @@ limitations under the License.
             const searchEl = panel.querySelector('.inlineLangSearch');
             applyLanguagePanelContainerTheme(panel, searchEl);
             panel.classList.add("utst-scroll");
-            document.body.appendChild(panel);
+            document.documentElement.appendChild(panel);
             inlineLanguagePanels.push({ panel, selectEl });
             return panel;
         }
@@ -3446,6 +3663,21 @@ limitations under the License.
         if (fullscreenToggle) fullscreenToggle.addEventListener('click', openFullscreenOverlay);
         if (fullscreenClose) fullscreenClose.addEventListener('click', closeFullscreenOverlay);
         const closeButton = translationBox.querySelector('#closeButton');
+
+        function lockPanelDimensions() {
+            if (!translationBox || translationBox.style.display !== 'block') return;
+            const styles = window.getComputedStyle(translationBox);
+            const width = parseFloat(styles.width);
+            const height = parseFloat(styles.height);
+            if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return;
+            translationBox.style.width = `${width}px`;
+            translationBox.style.minWidth = `${width}px`;
+            translationBox.style.maxWidth = `${width}px`;
+            translationBox.style.height = `${height}px`;
+            translationBox.style.minHeight = `${height}px`;
+            translationBox.style.maxHeight = `${height}px`;
+        }
+
         closeButton.addEventListener('click', () => {
             panelTranslateRequestId++;
             setPanelLoading(false);
@@ -3467,6 +3699,7 @@ limitations under the License.
         });
 
         settingsButton.addEventListener('click', () => {
+            lockPanelDimensions();
             const translatorPanel = document.getElementById('translatorPanel');
             const settingsPanel = document.getElementById('settingsPanel');
 
@@ -3544,6 +3777,22 @@ limitations under the License.
             scheduleSelectionBubbleUpdate();
         });
         document.addEventListener('mouseup', () => {
+            if (fullscreenTextareaResizePending) {
+                fullscreenTextareaResizePending = false;
+                if (fullscreenOverlay.style.display === 'flex' && fullscreenTextareaResizeActive) {
+                    const endHeight = Math.round(fullscreenTextareaResizeActive.getBoundingClientRect().height || 0);
+                    if (Math.abs(endHeight - fullscreenTextareaResizeStartHeight) >= 1) {
+                        syncFullscreenTextareaHeights(endHeight);
+                    }
+                }
+                fullscreenTextareaResizeActive = null;
+                fullscreenTextareaResizeStartHeight = 0;
+                fullscreenTextareaLastSyncedHeight = 0;
+                if (fullscreenTextareaResizeRaf) {
+                    cancelAnimationFrame(fullscreenTextareaResizeRaf);
+                    fullscreenTextareaResizeRaf = 0;
+                }
+            }
             isSelectingPointer = false;
             scheduleSelectionBubbleUpdate();
         }, true);
@@ -3557,6 +3806,7 @@ limitations under the License.
         }, true);
         window.addEventListener('resize', () => {
             updateInlinePanelsPosition();
+            syncFullscreenTextareaHeights();
             hideSelectionBubble();
             scheduleSelectionBubbleUpdate(40);
         });
