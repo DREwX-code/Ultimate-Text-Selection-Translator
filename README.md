@@ -3,13 +3,13 @@
 [![GreasyFork installs](https://img.shields.io/greasyfork/dt/536284?style=flat-square&label=installs&color=3b82f6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
 [![GreasyFork version](https://img.shields.io/greasyfork/v/536284?style=flat-square&label=version&color=8b5cf6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/versions)
 [![GitHub license](https://img.shields.io/github/license/DREwX-code/Ultimate-Text-Selection-Translator?style=flat-square)](./LICENSE)
-[![CodeFactor](https://img.shields.io/codefactor/grade/github/DREwX-code/neuraveil?style=flat-square&label=Code%20quality&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/drewx-code/ultimate-text-selection-translator)
+[![CodeFactor](https://img.shields.io/codefactor/grade/github/DREwX-code/Ultimate-Text-Selection-Translator?style=flat-square&label=Code%20quality&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/drewx-code/ultimate-text-selection-translator)
 <p>
 <strong><a href="https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text">
 Ultimate Text Selection Translator
 </a></strong>
 is a powerful Tampermonkey userscript that allows you to instantly translate any selected text on any website using a simple keyboard shortcut.
-No copy-paste, no external tools : translation happens directly on the page.
+No copy-paste, no external tools: translation happens directly on the page.
 </p>
 <p align="center">
   <img src="https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/UTST_poster.png" 
@@ -78,22 +78,15 @@ The script uses <code>translate.googleapis.com</code> to process translation req
 </p>
 
 
-## Feedback and contributions
+## Feedback & Contributions
 
-<p>
-Feedback, bug reports, and improvement suggestions are welcome via
-<a href="https://greasyfork.org/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/feedback">
-GreasyFork feedback
-</a>
-or
-<a href="https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/issues">
-GitHub Issues
-</a>.
-</p>
+Feedback, bug reports, and improvement suggestions are welcome.
+- [GreasyFork Feedback](https://greasyfork.org/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/feedback)
+- [GitHub Issues](https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/issues)
 
 ## Author
 
-Developed and maintained by <strong>Dℝ∃wX</strong> (<strong><a href="https://github.com/DREwX-code">DREwX-code</a></strong>).  
+Developed and maintained by **Dℝ∃wX** (GitHub: [DREwX-code](https://github.com/DREwX-code)).   
 Project designed with a focus on speed, simplicity, and seamless user experience.
 
 ## License
