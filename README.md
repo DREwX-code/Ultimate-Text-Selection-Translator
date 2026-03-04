@@ -1,5 +1,6 @@
 # UTST Userscript
 [![GreasyFork](https://img.shields.io/static/v1?label=%20&message=GreasyFork&style=flat-square&labelColor=7B0000&color=960000&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3ggEBCQHM3fXsAAAAVdJREFUOMudkz2qwkAUhc/goBaGJBgUtBCZyj0ILkpwAW7Bws4yO3AHLiCtEFD8KVREkoiFxZzX5A2KGfN4F04zMN+ce+5c4LMUgDmANYBnrnV+plBSi+FwyHq9TgA2LQpvCiEiABwMBtzv95RSfoNEHy8DYBzHrNVqVEr9BWKcqNFoxF6vx3a7zc1mYyC73a4MogBg7vs+z+czO50OW60Wt9stK5UKp9Mpj8cjq9WqDTBHnjAdxzGQZrPJw+HA31oulzbAWgLoA0CWZVBKIY5jzGYzdLtdE9DlcrFNrY98zobqOA6TJKHW2jg4nU5sNBpFDp6mhVe5rsvVasUwDHm9Xqm15u12o+/7Hy0gD8KatOd5vN/v1FozTVN6nkchxFuI6hsAAIMg4OPxMJCXdtTbR7JJCMEgCJhlGUlyPB4XfumozInrupxMJpRSRtZlKoNYl+m/6/wDuWAjtPfsQuwAAAAASUVORK5CYII=)](https://greasyfork.org/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
+[![Awesome Userscripts](https://img.shields.io/badge/Listed_in-Awesome_Userscripts-af68ff?style=flat-square&logo=awesomelists&logoColor=white)](https://github.com/awesome-scripts/awesome-userscripts)
 [![GreasyFork installs](https://img.shields.io/greasyfork/dt/536284?style=flat-square&label=installs&color=3b82f6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
 [![GreasyFork version](https://img.shields.io/greasyfork/v/536284?style=flat-square&label=version&color=8b5cf6)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text/versions)
 [![GitHub license](https://img.shields.io/github/license/DREwX-code/Ultimate-Text-Selection-Translator?style=flat-square)](./LICENSE)
@@ -14,7 +15,7 @@ No copy-paste, no external tools: translation happens directly on the page.
 <p align="center">
   <img src="https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/UTST_poster.png" 
        alt="Ultimate Text Selection Translator Poster" 
-       width="100%">
+       width="80%">
 </p>
 
 
@@ -58,14 +59,13 @@ You can also use the automatic selection button that appears at the end of highl
 </p>
 
 
-## Installation
+## Install
 
-<p>
-You can install the script by following the instructions
-<a href="https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/blob/main/Install%20this%20script.md">
-here
-</a>.
-</p>
+You can install the script by following the instructions  
+[Installation guide](https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/blob/main/Install%20this%20script.md)
+
+### Direct installation
+[![Install on GreasyFork](https://img.shields.io/badge/Install-GreasyFork-960000?style=for-the-badge)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
 
 ## Technical Information
 
