@@ -1,4 +1,3 @@
-
 /*
 UTST Translation Library
 
@@ -9,12 +8,14 @@ Do not import or modify this file directly unless you know exactly what you are 
 */
 
 
+
 // ==UserScript==
 // @name         UTST Translation Library
 // @description  Central translation library for UTST
 // @namespace    https://github.com/DREwX-code
 // @author       Dℝ∃wX
-// @version      1.0.3
+// @copyright    2025-2026 Dℝ∃wX
+// @version      1.0.4
 // @license      Apache-2.0
 // @grant        none
 // ==/UserScript==
@@ -40,6 +41,161 @@ limitations under the License.
     'use strict';
 
     const supportedUiLanguages = ['en', 'fr', 'es', 'de', 'it', 'pt', 'ru', 'zh-CN', 'ja', 'ar', 'hi', 'ko', 'tr', 'nl', 'pl', 'id', 'vi', 'uk', 'he'];
+
+    const shortcutSettingLabels = {
+        'en': {
+            'settingsShortcutLabel': 'Shortcut:',
+            'settingsShortcutListening': 'Press keys...',
+            'settingsShortcutHelp': 'Click, then press a combination with Ctrl, Alt, Shift, or Cmd.',
+            'settingsShortcutInvalid': 'Add at least Ctrl, Alt, Shift, or Cmd.',
+            'settingsShortcutSaved': 'Shortcut saved.',
+            'settingsShortcutReset': 'Reset shortcut'
+        },
+        'fr': {
+            'settingsShortcutLabel': 'Raccourci :',
+            'settingsShortcutListening': 'Appuyez sur les touches...',
+            'settingsShortcutHelp': 'Cliquez puis pressez une combinaison avec Ctrl, Alt, Shift ou Cmd.',
+            'settingsShortcutInvalid': 'Ajoutez au moins Ctrl, Alt, Shift ou Cmd.',
+            'settingsShortcutSaved': 'Raccourci sauvegardé.',
+            'settingsShortcutReset': 'Réinitialiser le raccourci'
+        },
+        'es': {
+            'settingsShortcutLabel': 'Atajo:',
+            'settingsShortcutListening': 'Pulsa las teclas...',
+            'settingsShortcutHelp': 'Haz clic y luego pulsa una combinación con Ctrl, Alt, Shift o Cmd.',
+            'settingsShortcutInvalid': 'Añade al menos Ctrl, Alt, Shift o Cmd.',
+            'settingsShortcutSaved': 'Atajo guardado.',
+            'settingsShortcutReset': 'Restablecer atajo'
+        },
+        'de': {
+            'settingsShortcutLabel': 'Tastenkürzel:',
+            'settingsShortcutListening': 'Tasten drücken...',
+            'settingsShortcutHelp': 'Klicken Sie und drücken Sie dann eine Kombination mit Strg, Alt, Shift oder Cmd.',
+            'settingsShortcutInvalid': 'Fügen Sie mindestens Strg, Alt, Shift oder Cmd hinzu.',
+            'settingsShortcutSaved': 'Tastenkürzel gespeichert.',
+            'settingsShortcutReset': 'Tastenkürzel zurücksetzen'
+        },
+        'it': {
+            'settingsShortcutLabel': 'Scorciatoia:',
+            'settingsShortcutListening': 'Premi i tasti...',
+            'settingsShortcutHelp': 'Fai clic, poi premi una combinazione con Ctrl, Alt, Shift o Cmd.',
+            'settingsShortcutInvalid': 'Aggiungi almeno Ctrl, Alt, Shift o Cmd.',
+            'settingsShortcutSaved': 'Scorciatoia salvata.',
+            'settingsShortcutReset': 'Ripristina scorciatoia'
+        },
+        'pt': {
+            'settingsShortcutLabel': 'Atalho:',
+            'settingsShortcutListening': 'Pressione as teclas...',
+            'settingsShortcutHelp': 'Clique e pressione uma combinação com Ctrl, Alt, Shift ou Cmd.',
+            'settingsShortcutInvalid': 'Adicione pelo menos Ctrl, Alt, Shift ou Cmd.',
+            'settingsShortcutSaved': 'Atalho salvo.',
+            'settingsShortcutReset': 'Redefinir atalho'
+        },
+        'ru': {
+            'settingsShortcutLabel': 'Сочетание клавиш:',
+            'settingsShortcutListening': 'Нажмите клавиши...',
+            'settingsShortcutHelp': 'Нажмите, затем введите сочетание с Ctrl, Alt, Shift или Cmd.',
+            'settingsShortcutInvalid': 'Добавьте хотя бы Ctrl, Alt, Shift или Cmd.',
+            'settingsShortcutSaved': 'Сочетание сохранено.',
+            'settingsShortcutReset': 'Сбросить сочетание'
+        },
+        'zh-CN': {
+            'settingsShortcutLabel': '快捷键：',
+            'settingsShortcutListening': '按下按键...',
+            'settingsShortcutHelp': '点击后按下包含 Ctrl、Alt、Shift 或 Cmd 的组合键。',
+            'settingsShortcutInvalid': '请至少添加 Ctrl、Alt、Shift 或 Cmd。',
+            'settingsShortcutSaved': '快捷键已保存。',
+            'settingsShortcutReset': '重置快捷键'
+        },
+        'ja': {
+            'settingsShortcutLabel': 'ショートカット：',
+            'settingsShortcutListening': 'キーを押してください...',
+            'settingsShortcutHelp': 'クリックしてから Ctrl、Alt、Shift、Cmd のいずれかを含む組み合わせを押してください。',
+            'settingsShortcutInvalid': 'Ctrl、Alt、Shift、Cmd のいずれかを追加してください。',
+            'settingsShortcutSaved': 'ショートカットを保存しました。',
+            'settingsShortcutReset': 'ショートカットをリセット'
+        },
+        'ar': {
+            'settingsShortcutLabel': 'الاختصار:',
+            'settingsShortcutListening': 'اضغط على المفاتيح...',
+            'settingsShortcutHelp': 'انقر ثم اضغط تركيبة تحتوي على Ctrl أو Alt أو Shift أو Cmd.',
+            'settingsShortcutInvalid': 'أضف على الأقل Ctrl أو Alt أو Shift أو Cmd.',
+            'settingsShortcutSaved': 'تم حفظ الاختصار.',
+            'settingsShortcutReset': 'إعادة تعيين الاختصار'
+        },
+        'hi': {
+            'settingsShortcutLabel': 'शॉर्टकट:',
+            'settingsShortcutListening': 'कुंजियां दबाएं...',
+            'settingsShortcutHelp': 'क्लिक करें, फिर Ctrl, Alt, Shift या Cmd के साथ संयोजन दबाएं.',
+            'settingsShortcutInvalid': 'कम से कम Ctrl, Alt, Shift या Cmd जोड़ें.',
+            'settingsShortcutSaved': 'शॉर्टकट सहेजा गया.',
+            'settingsShortcutReset': 'शॉर्टकट रीसेट करें'
+        },
+        'ko': {
+            'settingsShortcutLabel': '단축키:',
+            'settingsShortcutListening': '키를 누르세요...',
+            'settingsShortcutHelp': '클릭한 다음 Ctrl, Alt, Shift 또는 Cmd가 포함된 조합을 누르세요.',
+            'settingsShortcutInvalid': 'Ctrl, Alt, Shift 또는 Cmd 중 하나 이상을 추가하세요.',
+            'settingsShortcutSaved': '단축키가 저장되었습니다.',
+            'settingsShortcutReset': '단축키 재설정'
+        },
+        'tr': {
+            'settingsShortcutLabel': 'Kısayol:',
+            'settingsShortcutListening': 'Tuşlara basın...',
+            'settingsShortcutHelp': 'Tıklayın, ardından Ctrl, Alt, Shift veya Cmd içeren bir kombinasyona basın.',
+            'settingsShortcutInvalid': 'En az Ctrl, Alt, Shift veya Cmd ekleyin.',
+            'settingsShortcutSaved': 'Kısayol kaydedildi.',
+            'settingsShortcutReset': 'Kısayolu sıfırla'
+        },
+        'nl': {
+            'settingsShortcutLabel': 'Sneltoets:',
+            'settingsShortcutListening': 'Druk op toetsen...',
+            'settingsShortcutHelp': 'Klik en druk daarna op een combinatie met Ctrl, Alt, Shift of Cmd.',
+            'settingsShortcutInvalid': 'Voeg minstens Ctrl, Alt, Shift of Cmd toe.',
+            'settingsShortcutSaved': 'Sneltoets opgeslagen.',
+            'settingsShortcutReset': 'Sneltoets resetten'
+        },
+        'pl': {
+            'settingsShortcutLabel': 'Skrót:',
+            'settingsShortcutListening': 'Naciśnij klawisze...',
+            'settingsShortcutHelp': 'Kliknij, a potem naciśnij kombinację z Ctrl, Alt, Shift lub Cmd.',
+            'settingsShortcutInvalid': 'Dodaj co najmniej Ctrl, Alt, Shift lub Cmd.',
+            'settingsShortcutSaved': 'Skrót zapisany.',
+            'settingsShortcutReset': 'Resetuj skrót'
+        },
+        'id': {
+            'settingsShortcutLabel': 'Pintasan:',
+            'settingsShortcutListening': 'Tekan tombol...',
+            'settingsShortcutHelp': 'Klik, lalu tekan kombinasi dengan Ctrl, Alt, Shift, atau Cmd.',
+            'settingsShortcutInvalid': 'Tambahkan setidaknya Ctrl, Alt, Shift, atau Cmd.',
+            'settingsShortcutSaved': 'Pintasan disimpan.',
+            'settingsShortcutReset': 'Atur ulang pintasan'
+        },
+        'vi': {
+            'settingsShortcutLabel': 'Phím tắt:',
+            'settingsShortcutListening': 'Nhấn các phím...',
+            'settingsShortcutHelp': 'Nhấp rồi nhấn một tổ hợp có Ctrl, Alt, Shift hoặc Cmd.',
+            'settingsShortcutInvalid': 'Thêm ít nhất Ctrl, Alt, Shift hoặc Cmd.',
+            'settingsShortcutSaved': 'Đã lưu phím tắt.',
+            'settingsShortcutReset': 'Đặt lại phím tắt'
+        },
+        'uk': {
+            'settingsShortcutLabel': 'Комбінація клавіш:',
+            'settingsShortcutListening': 'Натисніть клавіші...',
+            'settingsShortcutHelp': 'Натисніть, а потім введіть комбінацію з Ctrl, Alt, Shift або Cmd.',
+            'settingsShortcutInvalid': 'Додайте принаймні Ctrl, Alt, Shift або Cmd.',
+            'settingsShortcutSaved': 'Комбінацію збережено.',
+            'settingsShortcutReset': 'Скинути комбінацію'
+        },
+        'he': {
+            'settingsShortcutLabel': 'קיצור דרך:',
+            'settingsShortcutListening': 'לחץ על מקשים...',
+            'settingsShortcutHelp': 'לחץ ואז הקש שילוב עם Ctrl, Alt, Shift או Cmd.',
+            'settingsShortcutInvalid': 'הוסף לפחות Ctrl, Alt, Shift או Cmd.',
+            'settingsShortcutSaved': 'קיצור הדרך נשמר.',
+            'settingsShortcutReset': 'אפס קיצור דרך'
+        }
+    };
 
     const languageNames = {
         'en': {
@@ -1221,6 +1377,11 @@ limitations under the License.
             'settingsBlacklistEmpty': 'ブロックされたサイトはありません。'
         }
     };
+
+    Object.entries(shortcutSettingLabels).forEach(([code, labels]) => {
+        if (!languageNames[code]) return;
+        Object.assign(languageNames[code], labels);
+    });
 
 
 
