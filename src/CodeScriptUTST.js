@@ -87,7 +87,7 @@
 // @author       Dℝ∃wX
 // @copyright    2025-2026 Dℝ∃wX
 // @license      Apache-2.0
-// @require      https://update.greasyfork.org/scripts/556911/1754127/UTST%20Translation%20Library.js
+// @require      https://update.greasyfork.org/scripts/556911/1864194/UTST%20Translation%20Library.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -95,7 +95,7 @@
 // @connect      translate.googleapis.com
 // @match        *://*/*
 // @run-at       document-start
-// @version      1.4.1
+// @version      1.4.2
 // @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
 // @tag          translation
 // @tag          text selection
@@ -130,17 +130,88 @@ limitations under the License.
 (function () {
     'use strict';
 
+    const UTST_LOGO_URL = 'https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png';
+    let utstLogoPreloadImage = null;
+    let utstLogoLoaded = false;
+
+    function preloadUtstLogo() {
+        if (utstLogoPreloadImage || typeof Image !== 'function') return;
+        utstLogoPreloadImage = new Image();
+        utstLogoPreloadImage.decoding = 'async';
+        utstLogoPreloadImage.referrerPolicy = 'no-referrer';
+        if ('fetchPriority' in utstLogoPreloadImage) {
+            utstLogoPreloadImage.fetchPriority = 'low';
+        }
+        utstLogoPreloadImage.onload = () => {
+            utstLogoLoaded = true;
+            window.dispatchEvent(new CustomEvent('utst-logo-loaded'));
+        };
+        utstLogoPreloadImage.src = UTST_LOGO_URL;
+    }
+
+    function scheduleUtstLogoPreload() {
+        const runWhenIdle = () => {
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(preloadUtstLogo, { timeout: 3000 });
+            } else {
+                window.setTimeout(preloadUtstLogo, 800);
+            }
+        };
+
+        if (document.readyState === 'complete') {
+            window.setTimeout(runWhenIdle, 0);
+        } else {
+            window.addEventListener('load', runWhenIdle, { once: true });
+        }
+    }
+
+    scheduleUtstLogoPreload();
+
     function bootstrap() {
 
 
-        GM_addStyle(`
+        const UTST_STYLE_TEXT = `
             @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+            :host {
+                all: initial !important;
+                position: static !important;
+                display: contents !important;
+                color-scheme: normal !important;
+                forced-color-adjust: none !important;
+                font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            }
+
+            :host *,
+            :host *::before,
+            :host *::after {
+                box-sizing: border-box !important;
+            }
 
             #closeButton:hover svg {
                 stroke: #ff4d4d !important;
                 filter: drop-shadow(0 0 4px rgba(255, 77, 77, 0.5));
                 transform: scale(1.1);
                 transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+
+            .utst-header-logo {
+                width: 18px !important;
+                height: 18px !important;
+                min-width: 18px !important;
+                display: block !important;
+                object-fit: contain !important;
+                pointer-events: none !important;
+                user-select: none !important;
+                flex: 0 0 18px !important;
+                filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28)) !important;
+            }
+
+            #fullscreenTitleWrap {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                min-width: 0 !important;
             }
 
             @keyframes utst-shimmer {
@@ -322,6 +393,24 @@ limitations under the License.
                 box-sizing: border-box !important;
             }
 
+            #backButton {
+                width: 20px !important;
+                height: 20px !important;
+                min-width: 20px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                line-height: 0 !important;
+                flex: 0 0 20px !important;
+            }
+
+            #backButton svg {
+                width: 20px !important;
+                height: 20px !important;
+                display: block !important;
+                flex: 0 0 20px !important;
+            }
+
             #utstTranslationBox {
                 width: min(420px, calc(100vw - 20px)) !important;
                 min-width: min(420px, calc(100vw - 20px)) !important;
@@ -412,6 +501,31 @@ limitations under the License.
 
             #speakTooltip .utst-speak-option:hover {
                 background: rgba(255,255,255,0.12);
+            }
+
+            #panelThemeCurrent,
+            .utst-theme-option-label {
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 9px !important;
+                min-width: 0 !important;
+            }
+
+            #panelThemeCurrent span:last-child,
+            .utst-theme-option-label span:last-child {
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+
+            .utst-theme-swatch {
+                width: 16px !important;
+                height: 10px !important;
+                min-width: 16px !important;
+                border-radius: 4px !important;
+                border: 1px solid var(--utst-theme-swatch-border, rgba(255, 255, 255, 0.24)) !important;
+                background: var(--utst-theme-swatch-bg, #2563eb) !important;
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
             }
 
             #fullscreenSwap {
@@ -513,7 +627,7 @@ limitations under the License.
             .utst-modern-loader {
                 position: absolute;
                 inset: 0;
-                display: flex;
+                display: none;
                 align-items: center;
                 justify-content: center;
                 border-radius: 10px;
@@ -528,6 +642,7 @@ limitations under the License.
             }
 
             .utst-modern-loader.is-active {
+                display: flex;
                 opacity: 1;
                 pointer-events: auto;
                 transform: scale(1);
@@ -698,6 +813,12 @@ limitations under the License.
                 border-color: #4a90e2;
             }
 
+            #utstTranslationBox select:focus,
+            #utstTranslationBox select:focus-visible {
+                outline: none !important;
+                box-shadow: none !important;
+            }
+
             .utst-blacklist-add {
                 border: none;
                 border-radius: 8px;
@@ -773,6 +894,57 @@ limitations under the License.
                 text-align: center;
             }
 
+            .utst-shortcut-control {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+                max-width: 260px;
+                margin: 0 auto;
+            }
+
+            .utst-shortcut-capture {
+                flex: 1;
+                min-width: 0;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                background: rgba(255, 255, 255, 0.08);
+                color: #fff;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                font-family: inherit;
+            }
+
+            .utst-shortcut-capture.is-recording {
+                border-color: #4a90e2;
+                box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.22);
+            }
+
+            .utst-shortcut-reset {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                background: rgba(255, 255, 255, 0.06);
+                color: #fff;
+                font-size: 15px;
+                line-height: 1;
+                cursor: pointer;
+                font-family: inherit;
+            }
+
+            .utst-shortcut-help {
+                width: 100%;
+                max-width: 260px;
+                margin: 5px auto 0;
+                min-height: 14px;
+                color: rgba(255, 255, 255, 0.58);
+                font-size: 11px;
+                line-height: 1.25;
+            }
+
             html.utst-theme-blue #utstSelectionBubble {
                 /* Muted deep blue, inspired by the panel but less saturated/flashy */
                 background: linear-gradient(135deg, rgba(30, 30, 47, 0.96) 0%, rgba(35, 35, 52, 0.96) 100%);
@@ -786,7 +958,50 @@ limitations under the License.
 
             html.utst-theme-blue #utstSelectionBubbleAction svg,
             html.utst-theme-blue #utstSelectionBubbleClose {
-                color: #e0e6ff;
+                color: #eaf2ff;
+            }
+
+            html.utst-theme-blue #utstTranslationBox {
+                background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%) !important;
+                border-color: rgba(255, 255, 255, 0.10) !important;
+                color: #ffffff !important;
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+            }
+
+            html.utst-theme-blue #utstTranslationBox #dragHandle {
+                background: linear-gradient(120deg, #1b1b2d, #262645) !important;
+                color: #ffffff !important;
+                box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.10) !important;
+            }
+
+            html.utst-theme-blue #utstTranslationBox #translationText {
+                background: rgba(255, 255, 255, 0.06) !important;
+                border: 1px solid rgba(255, 255, 255, 0.16) !important;
+                color: #ffffff !important;
+            }
+
+            html.utst-theme-blue #utstTranslationBox select,
+            html.utst-theme-blue #utstTranslationBox input,
+            html.utst-theme-blue #utstTranslationBox .utst-shortcut-capture,
+            html.utst-theme-blue #utstTranslationBox .utst-shortcut-reset {
+                background: rgba(255, 255, 255, 0.08) !important;
+                border-color: rgba(255, 255, 255, 0.14) !important;
+                color: #ffffff !important;
+            }
+
+            html.utst-theme-blue #utstTranslationBox .utst-bubble-settings {
+                border-top-color: rgba(255, 255, 255, 0.14) !important;
+            }
+
+            html.utst-theme-blue #utstTranslationBox .utst-toggle-row input[type="checkbox"] {
+                background: rgba(255, 255, 255, 0.10) !important;
+                border-color: rgba(255, 255, 255, 0.16) !important;
+            }
+
+            html.utst-theme-blue #utstTranslationBox .utst-toggle-row input[type="checkbox"]:checked {
+                background: #4a90e2 !important;
+                border-color: #8bb1ff !important;
+                box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.18) !important;
             }
 
             html.utst-theme-dark #utstSelectionBubble {
@@ -820,8 +1035,8 @@ limitations under the License.
             }
 
             html.utst-theme-blue #utstTranslationBox #settingsHeader {
-                background: #222b3f !important;
-                border-color: rgba(139, 177, 255, 0.28) !important;
+                background: rgba(30, 30, 47, 0.78) !important;
+                border-color: rgba(255, 255, 255, 0.14) !important;
             }
 
             html.utst-theme-blue #utstTranslationBox #settingsPanel {
@@ -986,6 +1201,17 @@ limitations under the License.
                 color: #ffffff !important;
             }
 
+            html.utst-theme-light #utstTranslationBox .utst-shortcut-capture,
+            html.utst-theme-light #utstTranslationBox .utst-shortcut-reset {
+                background: #ffffff !important;
+                border: 1px solid #cbd5e0 !important;
+                color: #2d3748 !important;
+            }
+
+            html.utst-theme-light #utstTranslationBox .utst-shortcut-help {
+                color: #718096 !important;
+            }
+
             html.utst-theme-light #utstTranslationBox #settingsHeader {
                 background: #ffffff !important;
                 border-color: rgba(148, 163, 184, 0.45) !important;
@@ -1030,6 +1256,13 @@ limitations under the License.
             html.utst-theme-blue #utstTranslationBox #speakTooltip .utst-speak-option:hover {
                 background: rgba(120, 165, 255, 0.22) !important;
                 color: #e9f1ff !important;
+            }
+
+            html.utst-theme-blue #panelThemePanel {
+                background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+                color: #ffffff !important;
             }
 
             html.utst-theme-light #fullscreenOverlay {
@@ -1080,7 +1313,52 @@ limitations under the License.
                 border: 1px solid #e2e8f0 !important;
                 box-shadow: 0 10px 15px rgba(0,0,0,0.05) !important;
             }
-            `);
+            `;
+
+        function getShadowSafeStyleText(cssText) {
+            return cssText.replace(/html\.(utst-theme-[a-z]+)\s+/g, ':host(.$1) ');
+        }
+
+        function setImportantStyle(el, prop, value) {
+            if (!el) return;
+            el.style.setProperty(prop, value, 'important');
+        }
+
+        function createIsolatedUiRoot(cssText) {
+            const host = document.createElement('div');
+            host.id = 'utstShadowHost';
+            setImportantStyle(host, 'all', 'initial');
+            setImportantStyle(host, 'position', 'static');
+            setImportantStyle(host, 'display', 'contents');
+            setImportantStyle(host, 'font-size', '14px');
+            setImportantStyle(host, 'line-height', 'normal');
+            setImportantStyle(host, 'color', '#fff');
+            setImportantStyle(host, 'z-index', '2147483647');
+            setImportantStyle(host, 'color-scheme', 'normal');
+            setImportantStyle(host, 'forced-color-adjust', 'none');
+
+            if (host.attachShadow) {
+                const root = host.attachShadow({ mode: 'open' });
+                const style = document.createElement('style');
+                style.textContent = getShadowSafeStyleText(cssText);
+                root.appendChild(style);
+                document.documentElement.appendChild(host);
+                return { host, root, usesShadow: true };
+            }
+
+            GM_addStyle(cssText);
+            document.documentElement.appendChild(host);
+            return { host, root: document.documentElement, usesShadow: false };
+        }
+
+        const utstUi = createIsolatedUiRoot(UTST_STYLE_TEXT);
+        const utstUiRoot = utstUi.root;
+
+        function eventPathContains(event, element) {
+            if (!event || !element) return false;
+            const path = typeof event.composedPath === 'function' ? event.composedPath() : null;
+            return (path && path.includes(element)) || (event.target && element.contains(event.target));
+        }
 
 
         const translationLibrary = (typeof window !== 'undefined' ? window.TraductionOutilTranslator : null)
@@ -1357,11 +1635,12 @@ limitations under the License.
             direction: ltr;
             text-align: left;
         `;
-                document.documentElement.appendChild(translationBox);
+                utstUiRoot.appendChild(translationBox);
 
 
                 translationBox.innerHTML = `
             <div id="dragHandle" style="position:absolute; top:0; left:0; right:0; height:28px; background: linear-gradient(120deg, #3a3a3f, #4b4b52); border-radius: 12px 12px 0 0; cursor: move; display:flex; align-items:center; gap:8px; padding:0 12px; color:#e5e5e5; font-size:12px; font-weight:600; letter-spacing:0.3px; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.08); user-select: none;">
+                <img class="utst-header-logo" data-utst-logo-src="${UTST_LOGO_URL}" alt="" draggable="false" aria-hidden="true">
                 <div style="width:44px; height:4px; border-radius:4px; background:rgba(255,255,255,0.4);"></div>
                 <span style="opacity:0.9;">${dragHandleLabel}</span>
             </div>
@@ -1385,9 +1664,9 @@ limitations under the License.
                 </div>
             </div>
             <div id="settingsHeader" style="position: absolute; top: 34px; left: 8px; display:none; align-items: center; gap: 8px; cursor: default;">
-                <div id="backButton" style="cursor: pointer;" title="Back">
+                <div id="backButton" style="width:20px; height:20px; min-width:20px; display:flex; align-items:center; justify-content:center; line-height:0; flex:0 0 20px; cursor:pointer;" title="Back">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
                     <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
                 </div>
@@ -1503,6 +1782,15 @@ limitations under the License.
         <option value="light">${langNames.themes.light}</option>
         </select>
 
+        <label id="shortcutCaptureLabel" for="shortcutCaptureButton" style="color:#fff; font-size:14px; display:block; margin:12px 0 4px;">
+        ${langNames.settingsShortcutLabel || languageNames.en.settingsShortcutLabel}
+        </label>
+        <div class="utst-shortcut-control">
+            <button id="shortcutCaptureButton" class="utst-shortcut-capture" type="button"></button>
+            <button id="shortcutResetButton" class="utst-shortcut-reset" type="button" title="${langNames.settingsShortcutReset || languageNames.en.settingsShortcutReset}">↺</button>
+        </div>
+        <div id="shortcutCaptureHelp" class="utst-shortcut-help"></div>
+
         <div class="utst-bubble-settings">
         <label class="utst-toggle-row" for="selectionBubbleEnabled">
             <input id="selectionBubbleEnabled" type="checkbox" />
@@ -1544,7 +1832,10 @@ limitations under the License.
         fullscreenOverlay.innerHTML = `
       <div id="fullscreenPanel" style="width: min(1100px, 95vw); min-height: 40vh; background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%); color: #fff; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 32px rgba(0,0,0,0.45); padding: 22px 22px 16px; position: relative;">
         <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom: 14px;">
-            <div id="fullscreenTitle" style="font-size:16px; font-weight:700; letter-spacing:0.4px; color:#e7e9ff; cursor: default;">${overlayLabels.title}</div>
+            <div id="fullscreenTitleWrap">
+                <img class="utst-header-logo" data-utst-logo-src="${UTST_LOGO_URL}" alt="" draggable="false" aria-hidden="true">
+                <div id="fullscreenTitle" style="font-size:16px; font-weight:700; letter-spacing:0.4px; color:#e7e9ff; cursor: default;">${overlayLabels.title}</div>
+            </div>
             <div id="fullscreenClose" style="cursor:pointer; width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:8px; transition: background 0.15s ease;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1569,7 +1860,7 @@ limitations under the License.
                 </div>
                 <select id="fullscreenSourceLang" style="display:none;">${sourceLanguageOptionsHtml}</select>
                 <div id="fullscreenSourceWrap" style="position:relative; flex:1; min-height:200px;">
-                    <textarea id="fullscreenSource" style="width:100%; height:100%; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
+                    <textarea id="fullscreenSource" spellcheck="false" autocorrect="off" autocapitalize="off" style="width:100%; height:100%; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:6px;">
                     <div id="fullscreenSourceCopy" style="width:38px; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; cursor:pointer; background: rgba(255,255,255,0.06);">
@@ -1611,7 +1902,7 @@ limitations under the License.
                 </div>
                 <select id="fullscreenTargetLang" style="display:none;">${targetLanguageOptionsHtml}</select>
                 <div id="fullscreenTargetWrap" style="position:relative; flex:1; min-height:200px;">
-                    <textarea id="fullscreenTarget" style="width:100%; height:100%; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
+                    <textarea id="fullscreenTarget" spellcheck="false" autocorrect="off" autocapitalize="off" style="width:100%; height:100%; min-height:200px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color:#fff; font-size:14px; line-height:1.5; resize: vertical; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);"></textarea>
                     <div id="utstFullscreenLoading" class="utst-modern-loader" data-mode="translate" aria-hidden="true" style="border-radius:10px;">
                         <div class="utst-modern-loader__card">
                             <div class="utst-modern-loader__ring"></div>
@@ -1642,7 +1933,20 @@ limitations under the License.
       </div>
     `;
         fullscreenOverlay.classList.add("utst-scroll");
-        document.documentElement.appendChild(fullscreenOverlay);
+        utstUiRoot.appendChild(fullscreenOverlay);
+
+        function hydrateUtstLogoImages() {
+            utstUiRoot.querySelectorAll('img[data-utst-logo-src]').forEach((img) => {
+                if (!img || img.getAttribute('src')) return;
+                img.src = img.getAttribute('data-utst-logo-src') || UTST_LOGO_URL;
+            });
+        }
+
+        if (utstLogoLoaded) {
+            hydrateUtstLogoImages();
+        } else {
+            window.addEventListener('utst-logo-loaded', hydrateUtstLogoImages, { once: true });
+        }
 
         const selectionBubble = document.createElement('div');
         selectionBubble.id = 'utstSelectionBubble';
@@ -1664,7 +1968,7 @@ limitations under the License.
         <button id="utstBubbleHideGlobal" class="utst-bubble-menu-btn" type="button">${langNames.bubble.hideGlobal}</button>
       </div>
     `;
-        document.documentElement.appendChild(selectionBubble);
+        utstUiRoot.appendChild(selectionBubble);
 
         const selectionBubbleClose = selectionBubble.querySelector('#utstSelectionBubbleClose');
         const selectionBubbleAction = selectionBubble.querySelector('#utstSelectionBubbleAction');
@@ -1805,6 +2109,10 @@ limitations under the License.
         const panelThemeCurrent = translationBox.querySelector('#panelThemeCurrent');
         const panelThemePanel = translationBox.querySelector('#panelThemePanel');
         const panelThemeGrid = translationBox.querySelector('#panelThemeGrid');
+        if (panelThemePanel) {
+            panelThemePanel.classList.add('utst-inline-lang-panel');
+            utstUiRoot.appendChild(panelThemePanel);
+        }
         const selectionBubbleEnabledCheckbox = translationBox.querySelector('#selectionBubbleEnabled');
         const bubbleBlacklistInput = translationBox.querySelector('#bubbleBlacklistInput');
         const bubbleBlacklistAddButton = translationBox.querySelector('#bubbleBlacklistAdd');
@@ -1812,9 +2120,15 @@ limitations under the License.
         const defaultTranslateLangLabel = translationBox.querySelector('label[for="defaultTranslateLang"]');
         const toolLanguageLabel = translationBox.querySelector('label[for="toolLanguage"]');
         const panelThemeLabel = translationBox.querySelector('label[for="panelTheme"]');
+        const shortcutCaptureLabel = translationBox.querySelector('#shortcutCaptureLabel');
+        const shortcutCaptureButton = translationBox.querySelector('#shortcutCaptureButton');
+        const shortcutResetButton = translationBox.querySelector('#shortcutResetButton');
+        const shortcutCaptureHelp = translationBox.querySelector('#shortcutCaptureHelp');
         const bubbleToggleLabel = translationBox.querySelector('label[for="selectionBubbleEnabled"] span');
         const bubbleBlacklistLabel = translationBox.querySelector('label[for="bubbleBlacklistInput"]');
         const sourceAutoOption = sourceLangSelect.querySelector('option[value="auto"]');
+        const translatorPanel = translationBox.querySelector('#translatorPanel');
+        const settingsPanel = translationBox.querySelector('#settingsPanel');
         const settingsHeader = translationBox.querySelector('#settingsHeader');
         const settingsHeaderTitle = translationBox.querySelector('#settingsHeaderTitle');
         const fullscreenTitleEl = fullscreenOverlay.querySelector('#fullscreenTitle');
@@ -1831,6 +2145,7 @@ limitations under the License.
         const fullscreenTargetLangPanel = fullscreenOverlay.querySelector('#fullscreenTargetLangPanel');
         const fullscreenSourceLangTrigger = fullscreenOverlay.querySelector('#fullscreenSourceLangTrigger');
         const fullscreenTargetLangTrigger = fullscreenOverlay.querySelector('#fullscreenTargetLangTrigger');
+        const fullscreenPanel = fullscreenOverlay.querySelector('#fullscreenPanel');
         const fullscreenSourceLabel = fullscreenOverlay.querySelector('#fullscreenSourceLabel');
         const fullscreenTargetLabel = fullscreenOverlay.querySelector('#fullscreenTargetLabel');
         const fullscreenSwap = fullscreenOverlay.querySelector('#fullscreenSwap');
@@ -1919,20 +2234,322 @@ limitations under the License.
         const BUBBLE_ENABLED_KEY = 'selectionBubbleEnabled';
         const BUBBLE_BLACKLIST_KEY = 'selectionBubbleBlacklist';
         const PANEL_THEME_KEY = 'panelTheme';
+        const SHORTCUT_KEY = 'selectionShortcut';
+        const DEFAULT_SHORTCUT = Object.freeze({
+            ctrl: true,
+            alt: false,
+            shift: false,
+            meta: false,
+            key: 'l',
+            code: 'KeyL',
+            displayKey: 'L'
+        });
         const currentSiteHost = normalizeHostname(window.location.hostname || window.location.host || '');
         let selectionBubbleEnabled = GM_getValue(BUBBLE_ENABLED_KEY, true) !== false;
         let selectionBubbleBlacklist = loadBubbleBlacklist();
         let currentPanelTheme = normalizePanelTheme(GM_getValue(PANEL_THEME_KEY, 'blue'));
+        let shortcutCaptureActive = false;
+        let keyboardLayoutMap = null;
+        let currentShortcut = loadShortcutSetting();
+
+        function cloneDefaultShortcut() {
+            return { ...DEFAULT_SHORTCUT };
+        }
+
+        function getShortcutCodeFromLegacyKey(key) {
+            const keyText = String(key || '');
+            if (!keyText) return '';
+            if (/^[a-z]$/i.test(keyText)) return `Key${keyText.toUpperCase()}`;
+            if (/^[0-9]$/.test(keyText)) return `Digit${keyText}`;
+            const specialKeys = {
+                ' ': 'Space',
+                space: 'Space',
+                arrowup: 'ArrowUp',
+                arrowdown: 'ArrowDown',
+                arrowleft: 'ArrowLeft',
+                arrowright: 'ArrowRight',
+                escape: 'Escape',
+                esc: 'Escape',
+                enter: 'Enter',
+                tab: 'Tab',
+                backspace: 'Backspace',
+                delete: 'Delete'
+            };
+            return specialKeys[keyText.toLowerCase()] || '';
+        }
+
+        function formatLayoutMapKey(value) {
+            const text = String(value || '');
+            if (!text) return '';
+            return text.length === 1 ? text.toUpperCase() : text;
+        }
+
+        function getKeyboardLayoutLabel(code) {
+            if (!keyboardLayoutMap || !code || typeof keyboardLayoutMap.get !== 'function') return '';
+            return formatLayoutMapKey(keyboardLayoutMap.get(code));
+        }
+
+        function getAsciiFallbackKey(fallbackKey) {
+            const keyText = String(fallbackKey || '');
+            return keyText.length === 1 && !/[^\x20-\x7E]/.test(keyText) ? keyText.toUpperCase() : '';
+        }
+
+        function getLetterOrDigitCodeLabel(codeText, fallbackKey, prefixLength) {
+            return getAsciiFallbackKey(fallbackKey) || codeText.slice(prefixLength);
+        }
+
+        function getSpecialCodeLabel(codeText) {
+            const specialCodes = {
+                ' ': 'Space',
+                Space: 'Space',
+                ArrowUp: 'Up',
+                ArrowDown: 'Down',
+                ArrowLeft: 'Left',
+                ArrowRight: 'Right',
+                Escape: 'Esc',
+                Enter: 'Enter',
+                Tab: 'Tab',
+                Backspace: 'Backspace',
+                Delete: 'Delete',
+                Insert: 'Insert',
+                Home: 'Home',
+                End: 'End',
+                PageUp: 'Page Up',
+                PageDown: 'Page Down',
+                Minus: '-',
+                Equal: '=',
+                BracketLeft: '[',
+                BracketRight: ']',
+                Backslash: '\\',
+                Semicolon: ';',
+                Quote: "'",
+                Backquote: '`',
+                Comma: ',',
+                Period: '.',
+                Slash: '/',
+                NumpadAdd: 'Num +',
+                NumpadSubtract: 'Num -',
+                NumpadMultiply: 'Num *',
+                NumpadDivide: 'Num /',
+                NumpadDecimal: 'Num .',
+                NumpadEnter: 'Num Enter'
+            };
+            return specialCodes[codeText] || '';
+        }
+
+        function refreshKeyboardLayoutMap() {
+            if (!navigator.keyboard || typeof navigator.keyboard.getLayoutMap !== 'function') return Promise.resolve(null);
+            return navigator.keyboard.getLayoutMap()
+                .then((layoutMap) => {
+                    keyboardLayoutMap = layoutMap;
+                    currentShortcut = normalizeShortcutCandidate(currentShortcut);
+                    GM_setValue(SHORTCUT_KEY, currentShortcut);
+                    updateShortcutSettingsUi();
+                    return layoutMap;
+                })
+                .catch(() => {
+                    keyboardLayoutMap = null;
+                    return null;
+                });
+        }
+
+        function getDisplayKeyFromCode(code, fallbackKey = '') {
+            const codeText = String(code || '');
+            const layoutLabel = getKeyboardLayoutLabel(codeText);
+            if (layoutLabel) return layoutLabel;
+            if (/^Key[A-Z]$/.test(codeText)) return getLetterOrDigitCodeLabel(codeText, fallbackKey, 3);
+            if (/^Digit[0-9]$/.test(codeText)) return getLetterOrDigitCodeLabel(codeText, fallbackKey, 5);
+            if (/^Numpad[0-9]$/.test(codeText)) return `Num ${codeText.slice(6)}`;
+            if (/^F([1-9]|1[0-9]|2[0-4])$/.test(codeText)) return codeText;
+
+            const specialLabel = getSpecialCodeLabel(codeText);
+            if (specialLabel) return specialLabel;
+
+            const keyText = String(fallbackKey || '');
+            return keyText.length === 1 ? keyText.toUpperCase() : keyText;
+        }
+
+        function normalizeShortcutCandidate(value) {
+            if (!value || typeof value !== 'object') return cloneDefaultShortcut();
+            const legacyKey = String(value.key || '').toLowerCase();
+            const code = String(value.code || getShortcutCodeFromLegacyKey(legacyKey));
+            const displayKey = getDisplayKeyFromCode(code, legacyKey);
+            const shortcut = {
+                ctrl: !!value.ctrl,
+                alt: !!value.alt,
+                shift: !!value.shift,
+                meta: !!value.meta,
+                key: legacyKey,
+                code,
+                displayKey
+            };
+            if (!shortcut.code || !hasShortcutModifier(shortcut) || isModifierShortcutCode(shortcut.code) || isModifierShortcutKey(shortcut.key)) {
+                return cloneDefaultShortcut();
+            }
+            return shortcut;
+        }
+
+        function loadShortcutSetting() {
+            const saved = GM_getValue(SHORTCUT_KEY, null);
+            const normalized = normalizeShortcutCandidate(saved);
+            if (!saved || JSON.stringify(saved) !== JSON.stringify(normalized)) {
+                GM_setValue(SHORTCUT_KEY, normalized);
+            }
+            return normalized;
+        }
+
+        function saveShortcutSetting(shortcut) {
+            currentShortcut = normalizeShortcutCandidate(shortcut);
+            GM_setValue(SHORTCUT_KEY, currentShortcut);
+            updateShortcutSettingsUi();
+            return currentShortcut;
+        }
+
+        function isModifierShortcutKey(key) {
+            return ['control', 'ctrl', 'shift', 'alt', 'meta', 'os'].includes(String(key || '').toLowerCase());
+        }
+
+        function isModifierShortcutCode(code) {
+            return [
+                'ControlLeft',
+                'ControlRight',
+                'ShiftLeft',
+                'ShiftRight',
+                'AltLeft',
+                'AltRight',
+                'MetaLeft',
+                'MetaRight',
+                'OSLeft',
+                'OSRight'
+            ].includes(String(code || ''));
+        }
+
+        function hasShortcutModifier(shortcut) {
+            return !!(shortcut && (shortcut.ctrl || shortcut.alt || shortcut.shift || shortcut.meta));
+        }
+
+        function getShortcutLabels() {
+            const fallback = languageNames.en || {};
+            return {
+                label: langNames.settingsShortcutLabel || fallback.settingsShortcutLabel || '',
+                listening: langNames.settingsShortcutListening || fallback.settingsShortcutListening || '',
+                help: langNames.settingsShortcutHelp || fallback.settingsShortcutHelp || '',
+                invalid: langNames.settingsShortcutInvalid || fallback.settingsShortcutInvalid || '',
+                saved: langNames.settingsShortcutSaved || fallback.settingsShortcutSaved || '',
+                reset: langNames.settingsShortcutReset || fallback.settingsShortcutReset || ''
+            };
+        }
+
+        function formatShortcut(shortcut) {
+            const normalized = normalizeShortcutCandidate(shortcut);
+            const uiCode = resolveUiLang(toolLanguagePreference);
+            const shiftLabel = uiCode && uiCode.toLowerCase().startsWith('fr') ? 'Maj' : 'Shift';
+            const metaLabel = navigator.platform && /mac/i.test(navigator.platform) ? 'Cmd' : 'Win';
+            const parts = [];
+            if (normalized.ctrl) parts.push('Ctrl');
+            if (normalized.alt) parts.push('Alt');
+            if (normalized.shift) parts.push(shiftLabel);
+            if (normalized.meta) parts.push(metaLabel);
+            parts.push(normalized.displayKey || normalized.key.toUpperCase());
+            return parts.join(' + ');
+        }
+
+        function shortcutFromKeyboardEvent(e) {
+            const key = String(e.key || '').toLowerCase();
+            const code = String(e.code || getShortcutCodeFromLegacyKey(key));
+            if (!code || isModifierShortcutCode(code) || isModifierShortcutKey(key)) return null;
+            return {
+                ctrl: !!e.ctrlKey,
+                alt: !!e.altKey,
+                shift: !!e.shiftKey,
+                meta: !!e.metaKey,
+                key,
+                code,
+                displayKey: getDisplayKeyFromCode(code, key)
+            };
+        }
+
+        function shortcutMatchesEvent(shortcut, e) {
+            const normalized = normalizeShortcutCandidate(shortcut);
+            const eventCode = String(e && e.code || getShortcutCodeFromLegacyKey(e && e.key));
+            return !!e
+                && !!e.ctrlKey === normalized.ctrl
+                && !!e.altKey === normalized.alt
+                && !!e.shiftKey === normalized.shift
+                && !!e.metaKey === normalized.meta
+                && eventCode === normalized.code;
+        }
+
+        function updateShortcutSettingsUi(message = '') {
+            if (!shortcutCaptureButton && !shortcutCaptureHelp && !shortcutCaptureLabel) return;
+            const labels = getShortcutLabels();
+            if (shortcutCaptureLabel) shortcutCaptureLabel.textContent = labels.label;
+            if (shortcutCaptureButton) {
+                shortcutCaptureButton.textContent = shortcutCaptureActive ? labels.listening : formatShortcut(currentShortcut);
+                shortcutCaptureButton.classList.toggle('is-recording', shortcutCaptureActive);
+                shortcutCaptureButton.setAttribute('aria-pressed', shortcutCaptureActive ? 'true' : 'false');
+            }
+            if (shortcutResetButton) {
+                shortcutResetButton.title = labels.reset;
+                shortcutResetButton.setAttribute('aria-label', labels.reset);
+            }
+            if (shortcutCaptureHelp) {
+                shortcutCaptureHelp.textContent = message || labels.help;
+            }
+        }
 
         function normalizePanelTheme(value) {
             return value === 'dark' || value === 'light' ? value : 'blue';
         }
 
+        function getThemeSwatchStyle(themeValue) {
+            const normalized = normalizePanelTheme(themeValue);
+            if (normalized === 'dark') {
+                return '--utst-theme-swatch-bg:#111827;--utst-theme-swatch-border:#475569;';
+            }
+            if (normalized === 'light') {
+                return '--utst-theme-swatch-bg:#f8fafc;--utst-theme-swatch-border:#cbd5e1;';
+            }
+            return '--utst-theme-swatch-bg:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);--utst-theme-swatch-border:#7db7ff;';
+        }
+
+        function getThemeLabelMarkup(themeValue) {
+            const normalized = normalizePanelTheme(themeValue);
+            return `<span class="utst-theme-swatch" style="${getThemeSwatchStyle(normalized)}"></span><span>${getThemeDisplayLabel(normalized)}</span>`;
+        }
+
         function getIconDefaultStrokeColor() {
-            return currentPanelTheme === 'light' ? '#4a5568' : '#ffffff';
+            if (currentPanelTheme === 'light') return '#4a5568';
+            if (currentPanelTheme === 'blue') return '#eaf2ff';
+            return '#f0f0f0';
         }
 
         const COPY_FEEDBACK_STROKE = 'rgb(64 130 243)';
+        let speechStateReady = false;
+
+        function applyIconThemeColors() {
+            const defaultStroke = getIconDefaultStrokeColor();
+            [speakButton, copyButton, fullscreenToggle, settingsButton, backButton, fullscreenSwap,
+                fullscreenSourceCopy, fullscreenSourceSpeak, fullscreenTargetCopy, fullscreenTargetSpeak
+            ].forEach((buttonEl) => {
+                if (!buttonEl) return;
+                buttonEl.querySelectorAll('svg, svg path, svg line, svg rect, svg polyline').forEach((node) => {
+                    node.style.stroke = defaultStroke;
+                });
+            });
+            const closeSvg = translationBox.querySelector('#closeButton svg');
+            if (closeSvg) closeSvg.style.stroke = '#ff4d4d';
+            const fullscreenCloseSvg = fullscreenOverlay.querySelector('#fullscreenClose svg');
+            if (fullscreenCloseSvg) fullscreenCloseSvg.style.stroke = '#ff6b6b';
+            if (speechStateReady) updateSpeechIconState();
+        }
+
+        function setButtonIconStroke(buttonEl, stroke) {
+            if (!buttonEl) return;
+            buttonEl.querySelectorAll('svg, svg path, svg line, svg rect, svg polyline').forEach((node) => {
+                node.style.stroke = stroke;
+            });
+        }
 
         function lockPageScrollForFullscreen() {
             if (fullscreenScrollLocked) return;
@@ -2075,9 +2692,14 @@ limitations under the License.
             }
             document.documentElement.classList.remove('utst-theme-blue', 'utst-theme-dark', 'utst-theme-light');
             document.documentElement.classList.add(`utst-theme-${normalizedTheme}`);
+            if (utstUi.host) {
+                utstUi.host.classList.remove('utst-theme-blue', 'utst-theme-dark', 'utst-theme-light');
+                utstUi.host.classList.add(`utst-theme-${normalizedTheme}`);
+            }
             if (panelThemeSelect) {
                 panelThemeSelect.value = normalizedTheme;
             }
+            applyIconThemeColors();
             updateThemePickerCurrentLabel();
             refreshLanguagePanelTheme();
         }
@@ -2091,13 +2713,13 @@ limitations under the License.
         function updateThemePickerCurrentLabel() {
             if (!panelThemeCurrent) return;
             const selected = panelThemeSelect ? normalizePanelTheme(panelThemeSelect.value || currentPanelTheme) : currentPanelTheme;
-            panelThemeCurrent.textContent = getThemeDisplayLabel(selected);
+            panelThemeCurrent.innerHTML = getThemeLabelMarkup(selected);
         }
 
         function renderThemePickerOptions() {
             if (!panelThemeGrid || !panelThemeSelect || !panelThemePanel) return;
-            const style = getLanguagePanelThemeStyles();
-            applyLanguagePanelContainerTheme(panelThemePanel, null);
+            const style = getThemePanelThemeStyles();
+            applyThemePanelContainerTheme();
             const selected = normalizePanelTheme(panelThemeSelect.value || currentPanelTheme);
             const isLightTheme = currentPanelTheme === 'light';
             const options = ['blue', 'dark', 'light'];
@@ -2109,6 +2731,10 @@ limitations under the License.
                     ? 'inset 0 0 0 1px rgba(38,61,104,0.28), 0 0 0 1px rgba(38,61,104,0.18)'
                     : (style.buttonActiveShadow || 'none');
                 return `<button type="button" data-theme="${value}" style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:8px;
                     padding:6px 8px;
                     text-align:left;
                     border-radius:8px;
@@ -2120,7 +2746,7 @@ limitations under the License.
                     cursor:pointer;
                     font-size:12px;
                     transition:background 0.15s ease, border 0.15s ease;
-                ">${getThemeDisplayLabel(value)}</button>`;
+                "><span class="utst-theme-option-label">${getThemeLabelMarkup(value)}</span></button>`;
             }).join('');
 
             panelThemeGrid.querySelectorAll('button').forEach(btn => {
@@ -2131,6 +2757,24 @@ limitations under the License.
                     if (panelThemePanel) panelThemePanel.style.display = 'none';
                 });
             });
+        }
+
+        function positionThemePanel() {
+            if (!panelThemePanel || panelThemePanel.style.display !== 'block' || !panelThemeTrigger) return;
+            const rect = panelThemeTrigger.getBoundingClientRect();
+            const scrollX = window.scrollX || document.documentElement.scrollLeft || 0;
+            const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+            const width = Math.round(rect.width || 260);
+            const panelWidth = Math.max(width, 220);
+            const left = Math.min(rect.left + scrollX, scrollX + window.innerWidth - panelWidth - 10);
+            const top = rect.bottom + scrollY + 6;
+            panelThemePanel.style.position = 'absolute';
+            panelThemePanel.style.left = `${Math.max(scrollX + 10, left)}px`;
+            panelThemePanel.style.top = `${top}px`;
+            panelThemePanel.style.right = 'auto';
+            panelThemePanel.style.width = `${panelWidth}px`;
+            panelThemePanel.style.maxWidth = `${Math.max(180, window.innerWidth - 20)}px`;
+            panelThemePanel.style.zIndex = '2147483646';
         }
 
         function getLanguagePanelThemeStyles() {
@@ -2173,20 +2817,26 @@ limitations under the License.
             }
 
             return {
-                panelBg: 'rgba(20,36,64,0.98)',
-                panelBorder: 'rgba(139,177,255,0.34)',
-                panelShadow: '0 10px 24px rgba(6,15,35,0.48)',
-                searchBg: 'rgba(120,165,255,0.12)',
-                searchBorder: 'rgba(139,177,255,0.34)',
-                searchColor: '#e9f1ff',
-                buttonBg: 'rgba(120,165,255,0.11)',
-                buttonBorder: 'rgba(139,177,255,0.28)',
-                buttonColor: '#e9f1ff',
-                buttonActiveBg: 'rgba(120,165,255,0.28)',
-                buttonActiveBorder: 'rgba(173,201,255,0.62)',
+                panelBg: 'linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%)',
+                panelBorder: 'rgba(255, 255, 255, 0.10)',
+                panelShadow: '0 12px 32px rgba(0, 0, 0, 0.45)',
+                searchBg: 'rgba(255, 255, 255, 0.07)',
+                searchBorder: 'rgba(255, 255, 255, 0.14)',
+                searchColor: '#ffffff',
+                buttonBg: 'rgba(255, 255, 255, 0.06)',
+                buttonBorder: 'rgba(255, 255, 255, 0.16)',
+                buttonColor: '#ffffff',
+                buttonActiveBg: 'rgba(74, 144, 226, 0.34)',
+                buttonActiveBorder: 'rgba(139, 177, 255, 0.72)',
+                buttonActiveColor: '#ffffff',
                 buttonWeight: 500,
-                buttonActiveWeight: 600
+                buttonActiveWeight: 650,
+                buttonActiveShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.10), 0 0 0 1px rgba(74, 144, 226, 0.16)'
             };
+        }
+
+        function getThemePanelThemeStyles() {
+            return getLanguagePanelThemeStyles();
         }
 
         function applyLanguagePanelContainerTheme(panelEl, searchEl) {
@@ -2201,6 +2851,14 @@ limitations under the License.
                 searchEl.style.border = `1px solid ${style.searchBorder}`;
                 searchEl.style.color = style.searchColor;
             }
+        }
+
+        function applyThemePanelContainerTheme() {
+            if (!panelThemePanel) return;
+            const style = getThemePanelThemeStyles();
+            panelThemePanel.style.background = style.panelBg;
+            panelThemePanel.style.border = `1px solid ${style.panelBorder}`;
+            panelThemePanel.style.boxShadow = style.panelShadow;
         }
 
         function renderInlineLanguageGridForTheme(panel, selectEl) {
@@ -2219,7 +2877,7 @@ limitations under the License.
         function refreshLanguagePanelTheme() {
             applyLanguagePanelContainerTheme(fullscreenSourceLangPanel, fullscreenSourceLangSearch);
             applyLanguagePanelContainerTheme(fullscreenTargetLangPanel, fullscreenTargetLangSearch);
-            applyLanguagePanelContainerTheme(panelThemePanel, null);
+            applyThemePanelContainerTheme();
             if (fullscreenSourceLangGrid && fullscreenSourceLangSelect
                 && (fullscreenSourceLangPanel.style.display === 'block' || fullscreenSourceLangGrid.childElementCount > 0)) {
                 renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
@@ -2286,40 +2944,40 @@ limitations under the License.
             return selectionBubbleEnabled && !isCurrentSiteBlacklisted();
         }
 
+        function getFocusSelectionRect(selection) {
+            try {
+                if (!selection.focusNode) return null;
+                const focusRange = document.createRange();
+                focusRange.setStart(selection.focusNode, selection.focusOffset);
+                focusRange.setEnd(selection.focusNode, selection.focusOffset);
+                const focusRect = focusRange.getBoundingClientRect();
+                if (focusRect && (focusRect.width || focusRect.height)) {
+                    return focusRect;
+                }
+            } catch (e) {
+                return null;
+            }
+            return null;
+        }
+
+        function getLastRangeClientRect(range) {
+            const clientRects = range.getClientRects();
+            return clientRects && clientRects.length ? clientRects[clientRects.length - 1] : null;
+        }
+
+        function isUsableSelectionRect(rect) {
+            return !!(rect && (rect.width || rect.height));
+        }
+
         function getSelectionContext() {
             const sel = window.getSelection();
             if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
             const text = sel.toString().trim();
             if (!text) return null;
             const range = sel.getRangeAt(0);
-            let rect = null;
+            const rect = getFocusSelectionRect(sel) || getLastRangeClientRect(range) || range.getBoundingClientRect();
 
-            try {
-                if (sel.focusNode) {
-                    const focusRange = document.createRange();
-                    focusRange.setStart(sel.focusNode, sel.focusOffset);
-                    focusRange.setEnd(sel.focusNode, sel.focusOffset);
-                    const focusRect = focusRange.getBoundingClientRect();
-                    if (focusRect && (focusRect.width || focusRect.height)) {
-                        rect = focusRect;
-                    }
-                }
-            } catch (e) {
-                rect = null;
-            }
-
-            if (!rect) {
-                const clientRects = range.getClientRects();
-                if (clientRects && clientRects.length) {
-                    rect = clientRects[clientRects.length - 1];
-                }
-            }
-
-            if (!rect) {
-                rect = range.getBoundingClientRect();
-            }
-
-            if (!rect || (!rect.width && !rect.height)) return null;
+            if (!isUsableSelectionRect(rect)) return null;
             return {
                 text,
                 rect,
@@ -2378,12 +3036,16 @@ limitations under the License.
             });
         }
 
+        function isFullscreenOpen() {
+            return fullscreenOverlay && fullscreenOverlay.style.display === 'flex';
+        }
+
         function updateSelectionBubble() {
             if (isSelectingPointer) {
                 hideSelectionBubble();
                 return;
             }
-            if (translationBox.style.display === 'block' || fullscreenOverlay.style.display === 'flex') {
+            if (translationBox.style.display === 'block' || isFullscreenOpen()) {
                 hideSelectionBubble();
                 return;
             }
@@ -2404,6 +3066,14 @@ limitations under the License.
         }
 
         function scheduleSelectionBubbleUpdate(delay = 20) {
+            if (isFullscreenOpen()) {
+                if (selectionBubbleUpdateTimer) {
+                    clearTimeout(selectionBubbleUpdateTimer);
+                    selectionBubbleUpdateTimer = null;
+                }
+                hideSelectionBubble();
+                return;
+            }
             if (selectionBubbleUpdateTimer) clearTimeout(selectionBubbleUpdateTimer);
             selectionBubbleUpdateTimer = setTimeout(() => {
                 selectionBubbleUpdateTimer = null;
@@ -2438,30 +3108,35 @@ limitations under the License.
             });
         }
 
-        function syncSelectionBubbleSettingsUi() {
+        function getSelectionBubbleUiLabels() {
             const bubbleLabels = (langNames && langNames.bubble) || (languageNames.en && languageNames.en.bubble) || {};
-            const hideOnLabel = bubbleLabels.hideOn || 'Hide on';
-            const hideSiteLabel = bubbleLabels.hideSite || 'Hide on this site';
-            const hideGlobalLabel = bubbleLabels.hideGlobal || 'Hide globally';
-            const closeTitleLabel = bubbleLabels.closeTitle || 'Hide selection bubble';
-            const translateTitleLabel = bubbleLabels.translateTitle || 'Translate selected text';
+            return {
+                hideOn: bubbleLabels.hideOn || 'Hide on',
+                hideSite: bubbleLabels.hideSite || 'Hide on this site',
+                hideGlobal: bubbleLabels.hideGlobal || 'Hide globally',
+                closeTitle: bubbleLabels.closeTitle || 'Hide selection bubble',
+                translateTitle: bubbleLabels.translateTitle || 'Translate selected text'
+            };
+        }
 
+        function setButtonTitleAndAria(buttonEl, label) {
+            if (!buttonEl) return;
+            buttonEl.title = label;
+            buttonEl.setAttribute('aria-label', label);
+        }
+
+        function syncSelectionBubbleSettingsUi() {
+            const labels = getSelectionBubbleUiLabels();
             if (selectionBubbleEnabledCheckbox) {
                 selectionBubbleEnabledCheckbox.checked = !!selectionBubbleEnabled;
             }
-            if (selectionBubbleClose) {
-                selectionBubbleClose.title = closeTitleLabel;
-                selectionBubbleClose.setAttribute('aria-label', closeTitleLabel);
-            }
-            if (selectionBubbleAction) {
-                selectionBubbleAction.title = translateTitleLabel;
-                selectionBubbleAction.setAttribute('aria-label', translateTitleLabel);
-            }
+            setButtonTitleAndAria(selectionBubbleClose, labels.closeTitle);
+            setButtonTitleAndAria(selectionBubbleAction, labels.translateTitle);
             if (bubbleHideSiteButton) {
-                bubbleHideSiteButton.textContent = currentSiteHost ? `${hideOnLabel} ${currentSiteHost}` : hideSiteLabel;
+                bubbleHideSiteButton.textContent = currentSiteHost ? `${labels.hideOn} ${currentSiteHost}` : labels.hideSite;
             }
             if (bubbleHideGlobalButton) {
-                bubbleHideGlobalButton.textContent = hideGlobalLabel;
+                bubbleHideGlobalButton.textContent = labels.hideGlobal;
             }
             renderBubbleBlacklist();
         }
@@ -2496,19 +3171,12 @@ limitations under the License.
             return valueToPersist;
         }
 
-        function applyToolLanguage(preference, { persist = false } = {}) {
-            const normalizedSelection = (preference === 'browser' || supportedUiLanguages.includes(preference))
-                ? preference
-                : 'browser';
+        function normalizeToolLanguagePreference(preference) {
+            return (preference === 'browser' || supportedUiLanguages.includes(preference)) ? preference : 'browser';
+        }
 
-            if (persist) {
-                GM_setValue('defaultToolLang', normalizedSelection);
-            }
-
-            const previousErrors = errors;
-
+        function setLocalizedRuntimeState(normalizedSelection) {
             toolLanguagePreference = normalizedSelection;
-
             const newUiLang = resolveUiLang(normalizedSelection);
             langNames = languageNames[newUiLang];
             errors = langNames.errors;
@@ -2518,26 +3186,38 @@ limitations under the License.
             settingsTitle = langNames.settingsTitle || languageNames.en.settingsTitle;
             settingsDefaultLabel = langNames.settingsDefaultLabel || languageNames.en.settingsDefaultLabel;
             settingsToolLabel = langNames.settingsToolLabel || languageNames.en.settingsToolLabel;
-            const settingsThemeLabel = langNames.settingsThemeLabel || languageNames.en.settingsThemeLabel || 'Theme:';
-            const settingsBubbleLabel = langNames.settingsBubbleLabel || languageNames.en.settingsBubbleLabel || 'Selection Bubble';
-            const settingsBlacklistLabel = langNames.settingsBlacklistLabel || languageNames.en.settingsBlacklistLabel || 'Blacklist';
-            const settingsBlacklistAdd = langNames.settingsBlacklistAdd || languageNames.en.settingsBlacklistAdd || 'Add';
+        }
 
+        function getCurrentSettingsLabels() {
+            return {
+                theme: langNames.settingsThemeLabel || languageNames.en.settingsThemeLabel || 'Theme:',
+                bubble: langNames.settingsBubbleLabel || languageNames.en.settingsBubbleLabel || 'Selection Bubble',
+                blacklist: langNames.settingsBlacklistLabel || languageNames.en.settingsBlacklistLabel || 'Blacklist',
+                blacklistAdd: langNames.settingsBlacklistAdd || languageNames.en.settingsBlacklistAdd || 'Add'
+            };
+        }
+
+        function updateSettingsTexts() {
+            const labels = getCurrentSettingsLabels();
             if (settingsHeaderTitle) settingsHeaderTitle.textContent = settingsTitle;
             if (defaultTranslateLangLabel) defaultTranslateLangLabel.textContent = settingsDefaultLabel;
             if (toolLanguageLabel) toolLanguageLabel.textContent = settingsToolLabel;
-            if (panelThemeLabel) panelThemeLabel.textContent = settingsThemeLabel;
-            if (bubbleToggleLabel) bubbleToggleLabel.textContent = settingsBubbleLabel;
-            if (bubbleBlacklistLabel) bubbleBlacklistLabel.textContent = settingsBlacklistLabel;
-            if (bubbleBlacklistAddButton) bubbleBlacklistAddButton.textContent = settingsBlacklistAdd;
+            if (panelThemeLabel) panelThemeLabel.textContent = labels.theme;
+            if (bubbleToggleLabel) bubbleToggleLabel.textContent = labels.bubble;
+            if (bubbleBlacklistLabel) bubbleBlacklistLabel.textContent = labels.blacklist;
+            if (bubbleBlacklistAddButton) bubbleBlacklistAddButton.textContent = labels.blacklistAdd;
             if (settingsButton) settingsButton.title = settingsTitle;
+        }
 
+        function updateTranslatorTexts() {
             if (sourceAutoOption) sourceAutoOption.textContent = langNames.auto;
-
             if (speakTranslated) speakTranslated.textContent = tooltips.listenTranslated;
             if (speakOriginal) speakOriginal.textContent = tooltips.listenOriginal;
             const dragLabelEl = translationBox.querySelector('#dragHandle span');
             if (dragLabelEl) dragLabelEl.textContent = dragHandleLabel;
+        }
+
+        function updateFullscreenTexts() {
             if (fullscreenTitleEl) fullscreenTitleEl.textContent = overlayLabels.title;
             if (fullscreenSourceLabel) fullscreenSourceLabel.textContent = overlayLabels.source;
             if (fullscreenTargetLabel) fullscreenTargetLabel.textContent = overlayLabels.target;
@@ -2545,6 +3225,9 @@ limitations under the License.
             if (fullscreenSourceLangSearch) fullscreenSourceLangSearch.placeholder = langNames.navigator;
             if (fullscreenTargetLangSearch) fullscreenTargetLangSearch.placeholder = langNames.navigator;
             syncLoadingTitles();
+        }
+
+        function refreshFullscreenLanguageSelects() {
             if (fullscreenSourceLangSelect) {
                 const prev = fullscreenSourceLangSelect.value || 'auto';
                 sourceLanguageOptionsHtml = buildSourceLanguageOptionsHtml();
@@ -2559,11 +3242,16 @@ limitations under the License.
             }
             updateFullscreenSourceCurrentLabel();
             updateFullscreenTargetCurrentLabel();
+        }
 
+        function refreshToolLanguageSelect(normalizedSelection) {
             if (toolLanguageSelect) {
                 toolLanguageSelect.innerHTML = buildToolLanguageOptionsHtml();
                 toolLanguageSelect.value = normalizedSelection;
             }
+        }
+
+        function refreshThemeOptionsLabels() {
             if (panelThemeSelect) {
                 const blueOption = panelThemeSelect.querySelector('option[value="blue"]');
                 const darkOption = panelThemeSelect.querySelector('option[value="dark"]');
@@ -2575,18 +3263,22 @@ limitations under the License.
             }
             updateThemePickerCurrentLabel();
             renderThemePickerOptions();
+        }
+
+        function refreshInlineLanguagePlaceholders() {
             inlineLanguagePanels.forEach(({ panel }) => {
                 const searchEl = panel.querySelector('.inlineLangSearch');
                 if (searchEl) searchEl.placeholder = langNames.navigator;
             });
+        }
 
+        function updateNoTextErrorMessage(previousErrors) {
             if (translationText && previousErrors && translationText.textContent === previousErrors.noText) {
                 translationText.textContent = errors.noText;
             }
+        }
 
-            syncSelectionBubbleSettingsUi();
-            scheduleSelectionBubbleUpdate(0);
-
+        function refreshTargetLanguageSelects() {
             const currentTargetValue = targetLangSelect.value;
             const savedDefaultValue = GM_getValue('defaultTranslateLang', defaultTargetLang);
             const refreshedTargetOptions = buildTargetLanguageOptions(true);
@@ -2595,6 +3287,26 @@ limitations under the License.
 
             defaultTranslateLangSelect.innerHTML = refreshedTargetOptions;
             ensureSelectValue(defaultTranslateLangSelect, savedDefaultValue);
+        }
+
+        function applyToolLanguage(preference, { persist = false } = {}) {
+            const normalizedSelection = normalizeToolLanguagePreference(preference);
+            if (persist) GM_setValue('defaultToolLang', normalizedSelection);
+
+            const previousErrors = errors;
+            setLocalizedRuntimeState(normalizedSelection);
+            updateSettingsTexts();
+            updateTranslatorTexts();
+            updateFullscreenTexts();
+            refreshFullscreenLanguageSelects();
+            refreshToolLanguageSelect(normalizedSelection);
+            refreshThemeOptionsLabels();
+            updateShortcutSettingsUi();
+            refreshInlineLanguagePlaceholders();
+            updateNoTextErrorMessage(previousErrors);
+            syncSelectionBubbleSettingsUi();
+            scheduleSelectionBubbleUpdate(0);
+            refreshTargetLanguageSelects();
         }
 
         const initialTargetLang = getSavedTargetLanguage();
@@ -2611,6 +3323,16 @@ limitations under the License.
             ensureSelectValue(targetLangSelect, persisted);
             currentResolvedTargetLang = persisted === 'navigator' ? browserLang : persisted;
             handleLanguageChange();
+        });
+
+        [defaultTranslateLangLabel, toolLanguageLabel].forEach((labelEl) => {
+            if (!labelEl) return;
+            labelEl.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+            });
+            labelEl.addEventListener('click', (e) => {
+                e.preventDefault();
+            });
         });
 
         if (toolLanguageSelect) {
@@ -2641,6 +3363,61 @@ limitations under the License.
                 }
                 renderThemePickerOptions();
                 panelThemePanel.style.display = 'block';
+                positionThemePanel();
+            });
+        }
+
+        if (shortcutCaptureButton) {
+            shortcutCaptureButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                shortcutCaptureActive = true;
+                refreshKeyboardLayoutMap();
+                updateShortcutSettingsUi();
+                shortcutCaptureButton.focus();
+            });
+
+            shortcutCaptureButton.addEventListener('keydown', (e) => {
+                if (!shortcutCaptureActive) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (e.key === 'Escape' && !hasShortcutModifier({
+                    ctrl: e.ctrlKey,
+                    alt: e.altKey,
+                    shift: e.shiftKey,
+                    meta: e.metaKey
+                })) {
+                    shortcutCaptureActive = false;
+                    updateShortcutSettingsUi();
+                    return;
+                }
+
+                const candidate = shortcutFromKeyboardEvent(e);
+                const labels = getShortcutLabels();
+                if (!candidate || !hasShortcutModifier(candidate)) {
+                    updateShortcutSettingsUi(labels.invalid);
+                    return;
+                }
+
+                shortcutCaptureActive = false;
+                saveShortcutSetting(candidate);
+                updateShortcutSettingsUi(labels.saved);
+            });
+
+            shortcutCaptureButton.addEventListener('blur', () => {
+                if (!shortcutCaptureActive) return;
+                shortcutCaptureActive = false;
+                updateShortcutSettingsUi();
+            });
+        }
+
+        if (shortcutResetButton) {
+            shortcutResetButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                shortcutCaptureActive = false;
+                saveShortcutSetting(cloneDefaultShortcut());
             });
         }
 
@@ -2685,7 +3462,7 @@ limitations under the License.
 
         document.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
-            if (selectionBubble.contains(e.target) || translationBox.contains(e.target) || fullscreenOverlay.contains(e.target)) return;
+            if (eventPathContains(e, selectionBubble) || eventPathContains(e, translationBox) || eventPathContains(e, fullscreenOverlay)) return;
             isSelectingPointer = true;
             hideSelectionBubble();
         }, true);
@@ -2737,55 +3514,114 @@ limitations under the License.
         applyPanelTheme(currentPanelTheme);
         applyToolLanguage(toolLanguagePreference);
         syncSelectionBubbleSettingsUi();
+        refreshKeyboardLayoutMap();
         scheduleSelectionBubbleUpdate(0);
 
 
 
-        function splitSentences(text) {
-            const regex = /(\.\s+|\.\n|\.)/;
-            let parts = text.split(regex);
-            let sentences = [];
-            let currentSentence = '';
+        function splitLineIntoSentencesPreservingSpacing(line) {
+            if (!line) return [];
+            const segments = [];
+            const sentenceEndChars = '.!?。！？';
+            let start = 0;
 
-            for (let i = 0; i < parts.length; i++) {
-                currentSentence += parts[i];
-                if (parts[i].match(regex) || i === parts.length - 1) {
-                    if (currentSentence.trim()) {
-                        sentences.push(currentSentence.trim());
-                    }
-                    currentSentence = '';
+            for (let i = 0; i < line.length; i++) {
+                if (!sentenceEndChars.includes(line[i])) continue;
+
+                let end = i + 1;
+                while (end < line.length && (line[end] === ' ' || line[end] === '\t')) {
+                    end++;
                 }
+                segments.push(line.slice(start, end));
+                start = end;
             }
 
-            return sentences.length ? sentences : [text];
+            if (start < line.length) {
+                segments.push(line.slice(start));
+            }
+
+            return segments.length ? segments : [line];
+        }
+
+        function splitSentences(text) {
+            if (!text) return [text];
+            const segments = [];
+            const lineBreakRegex = /(\r\n|\r|\n)/g;
+            let lastIndex = 0;
+            let match;
+
+            while ((match = lineBreakRegex.exec(text)) !== null) {
+                if (match.index > lastIndex) {
+                    segments.push(...splitLineIntoSentencesPreservingSpacing(text.slice(lastIndex, match.index)));
+                }
+                segments.push(match[0]);
+                lastIndex = match.index + match[0].length;
+            }
+
+            if (lastIndex < text.length) {
+                segments.push(...splitLineIntoSentencesPreservingSpacing(text.slice(lastIndex)));
+            }
+
+            return segments.length ? segments : [text];
+        }
+
+        function splitOversizedSegment(segment, maxLength) {
+            if (!segment || segment.length <= maxLength) return [segment];
+            const chunks = [];
+            let start = 0;
+
+            while (start < segment.length) {
+                let end = Math.min(start + maxLength, segment.length);
+                if (end < segment.length) {
+                    const spaceIndex = segment.lastIndexOf(' ', end);
+                    const tabIndex = segment.lastIndexOf('\t', end);
+                    const breakIndex = Math.max(spaceIndex, tabIndex);
+                    if (breakIndex > start + Math.floor(maxLength * 0.55)) {
+                        end = breakIndex + 1;
+                    }
+                }
+                chunks.push(segment.slice(start, end));
+                start = end;
+            }
+
+            return chunks;
+        }
+
+        function buildTranslationChunks(text, maxLength = 1800) {
+            const segments = splitSentences(text).flatMap(segment => splitOversizedSegment(segment, maxLength));
+            const chunks = [];
+            let current = '';
+
+            segments.forEach(segment => {
+                if (!segment) return;
+                if (current && current.length + segment.length > maxLength) {
+                    chunks.push(current);
+                    current = '';
+                }
+                current += segment;
+            });
+
+            if (current) {
+                chunks.push(current);
+            }
+
+            return chunks.length ? chunks : [text];
         }
 
 
         function translateSentence(text, sourceLang, targetLang, callback) {
-            if (!text.trim()) {
+            if (!text || !text.trim()) {
                 callback(text, null);
                 return;
             }
 
-            const match = text.match(/([\s\S]*?)(?:(\.\s+|\.\n|\.)|$)/);
-            const textToTranslate = match ? (match[1] || text) : text;
-            const delimiter = match && match[2] ? match[2] : '';
-
-            function chunkBySize(s, size = 1000) {
-                const out = [];
-                for (let i = 0; i < s.length; i += size) out.push(s.slice(i, i + size));
-                return out;
-            }
-
-
-            let sentences = splitSentences(text).flatMap(seg =>
-                seg.length > 1000 ? chunkBySize(seg) : [seg]
-            );
-
+            const leadingWhitespace = text.match(/^\s*/)[0];
+            const trailingWhitespace = text.match(/\s*$/)[0];
+            const textToTranslate = text.slice(leadingWhitespace.length, text.length - trailingWhitespace.length);
 
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(textToTranslate.trim())}`,
+                url: `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(textToTranslate)}`,
                 onload: function (response) {
                     try {
                         const data = JSON.parse(response.responseText);
@@ -2801,17 +3637,17 @@ limitations under the License.
                             }
                         }
 
-                        const translation = (data && data[0] && data[0][0] && data[0][0][0])
-                            ? data[0][0][0] + delimiter
-                            : '' + delimiter;
+                        const translation = (data && data[0])
+                            ? data[0].map(part => part && part[0] ? part[0] : '').join('')
+                            : '';
 
-                        callback(translation, detected || null);
+                        callback(`${leadingWhitespace}${translation}${trailingWhitespace}`, detected || null);
                     } catch (e) {
-                        callback(errors.translation + delimiter, null);
+                        callback(`${leadingWhitespace}${errors.translation}${trailingWhitespace}`, null);
                     }
                 },
                 onerror: function () {
-                    callback(errors.connection + delimiter, null);
+                    callback(`${leadingWhitespace}${errors.connection}${trailingWhitespace}`, null);
                 }
             });
         }
@@ -2835,36 +3671,57 @@ limitations under the License.
                 resolvedTargetLang = fallback || defaultTargetLang;
             }
 
-            const sentences = splitSentences(text);
+            const sentences = buildTranslationChunks(text);
             let translatedSentences = [];
             let completed = 0;
+            let activeRequests = 0;
+            let nextIndex = 0;
+            const maxConcurrentRequests = 3;
 
             let runDetectedLang = null;
 
-            sentences.forEach((sentence, index) => {
-                translateSentence(sentence, sourceLang, resolvedTargetLang, (translation, detected) => {
-                    translatedSentences[index] = translation;
+            function finishTranslationIfComplete() {
+                if (completed !== sentences.length) return;
+                if (runDetectedLang && sourceLangSelect.querySelector(`option[value="${runDetectedLang}"]`)) {
+                    sourceLangSelect.value = runDetectedLang;
+                    detectedSourceLang = runDetectedLang;
+                } else {
+                    sourceLangSelect.value = 'auto';
+                    detectedSourceLang = 'auto';
+                }
+                updateFullscreenSourceCurrentLabel();
 
-                    if (!runDetectedLang && detected && googleTranslateLanguages[detected]) {
-                        runDetectedLang = detected;
-                    }
+                const fullTranslation = translatedSentences.join('');
+                callback(fullTranslation, position, resolvedTargetLang);
+            }
 
-                    completed++;
-                    if (completed === sentences.length) {
-                        if (runDetectedLang && sourceLangSelect.querySelector(`option[value="${runDetectedLang}"]`)) {
-                            sourceLangSelect.value = runDetectedLang;
-                            detectedSourceLang = runDetectedLang;
-                        } else {
-                            sourceLangSelect.value = 'auto';
-                            detectedSourceLang = 'auto';
+            function runNextTranslations() {
+                while (activeRequests < maxConcurrentRequests && nextIndex < sentences.length) {
+                    const index = nextIndex++;
+                    const sentence = sentences[index];
+                    activeRequests++;
+
+                    translateSentence(sentence, sourceLang, resolvedTargetLang, (translation, detected) => {
+                        translatedSentences[index] = translation;
+                        activeRequests--;
+                        completed++;
+
+                        if (!runDetectedLang && detected && googleTranslateLanguages[detected]) {
+                            runDetectedLang = detected;
                         }
-                        updateFullscreenSourceCurrentLabel();
 
-                        const fullTranslation = translatedSentences.join('');
-                        callback(fullTranslation, position, resolvedTargetLang);
-                    }
-                });
-            });
+                        finishTranslationIfComplete();
+                        runNextTranslations();
+                    });
+                }
+            }
+
+            if (!sentences.length) {
+                callback('', position, resolvedTargetLang);
+                return;
+            }
+
+            runNextTranslations();
         }
 
 
@@ -2879,10 +3736,7 @@ limitations under the License.
 
         function setSpeakButtonVisualState(buttonEl, active) {
             if (!buttonEl) return;
-            const svg = buttonEl.querySelector('svg');
-            if (svg) {
-                svg.style.stroke = active ? SPEECH_ACTIVE_STROKE : '';
-            }
+            setButtonIconStroke(buttonEl, active ? SPEECH_ACTIVE_STROKE : getIconDefaultStrokeColor());
         }
 
         function updateSpeechIconState() {
@@ -2894,6 +3748,9 @@ limitations under the License.
             setSpeakButtonVisualState(fullscreenSourceSpeak, sourceActive);
             setSpeakButtonVisualState(fullscreenTargetSpeak, targetActive);
         }
+
+        speechStateReady = true;
+        updateSpeechIconState();
 
         function normalizeSpeechLangTag(langTag) {
             return (langTag || '').toLowerCase().replace(/_/g, '-').trim();
@@ -3110,8 +3967,6 @@ limitations under the License.
             sourceLangSelect.value = 'auto';
             detectedSourceLang = 'auto';
 
-            const translatorPanel = document.getElementById('translatorPanel');
-            const settingsPanel = document.getElementById('settingsPanel');
             if (translatorPanel) translatorPanel.style.display = 'block';
             if (settingsPanel) settingsPanel.style.display = 'none';
             if (settingsHeader) settingsHeader.style.display = 'none';
@@ -3162,7 +4017,7 @@ limitations under the License.
 
 
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key.toLowerCase() === 'l' && !e.altKey && !e.metaKey && !e.shiftKey) {
+            if (!shortcutCaptureActive && shortcutMatchesEvent(currentShortcut, e)) {
                 e.preventDefault();
                 const context = getSelectionContext();
                 openTranslationPanelForText(context ? context.text : '', context ? context.position : null);
@@ -3203,7 +4058,7 @@ limitations under the License.
             speakTooltip.style.display = 'none';
         });
         speakButton.addEventListener('click', (e) => {
-            if (speakTooltip && speakTooltip.contains(e.target)) return;
+            if (speakTooltip && eventPathContains(e, speakTooltip)) return;
             if (speechPlaying && currentSpeakerId && currentSpeakerId.startsWith('panel-')) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3230,9 +4085,9 @@ limitations under the License.
         copyButton.addEventListener('click', () => {
             if (currentTranslatedText) {
                 navigator.clipboard.writeText(currentTranslatedText);
-                copyButton.querySelector('svg').style.stroke = COPY_FEEDBACK_STROKE;
+                setButtonIconStroke(copyButton, COPY_FEEDBACK_STROKE);
                 setTimeout(() => {
-                    copyButton.querySelector('svg').style.stroke = getIconDefaultStrokeColor();
+                    applyIconThemeColors();
                 }, 1000);
             }
         });
@@ -3259,7 +4114,9 @@ limitations under the License.
             renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
             renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
             syncFullscreenTextareaHeights();
-            scheduleFullscreenTranslate(0, 'translate');
+            if (!fullscreenTarget.value && fullscreenSource.value.trim()) {
+                scheduleFullscreenTranslate(350, 'translate');
+            }
         }
 
         function closeFullscreenOverlay() {
@@ -3280,12 +4137,17 @@ limitations under the License.
         }
 
         function translateInFullscreen(reason = 'translate') {
-            const text = fullscreenSource.value.trim();
+            const text = fullscreenSource.value || '';
             const target = fullscreenTargetLangSelect
                 ? ensureFullscreenTargetLanguageValid(fullscreenTargetLangSelect.value)
                 : (targetLangSelect ? targetLangSelect.value : defaultTargetLang);
             const srcLang = fullscreenSourceLangSelect ? fullscreenSourceLangSelect.value || 'auto' : 'auto';
             const requestId = ++fullscreenTranslateRequestId;
+            if (!text.trim()) {
+                setFullscreenLoading(false, reason === 'language' ? 'language' : 'translate');
+                fullscreenTarget.value = '';
+                return;
+            }
             setFullscreenLoading(true, reason === 'language' ? 'language' : 'translate');
             translateText(text, srcLang, target, (translation, pos, resolvedTargetLang) => {
                 if (requestId !== fullscreenTranslateRequestId) return;
@@ -3311,19 +4173,32 @@ limitations under the License.
             if (fullscreenTargetLangPanel) fullscreenTargetLangPanel.style.display = 'none';
         }
 
-        function renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl, customOptions) {
-            if (!gridEl || !selectEl) return;
-            const style = getLanguagePanelThemeStyles();
-            applyLanguagePanelContainerTheme(panelEl, searchEl);
-            const query = (searchEl && searchEl.value || '').toLowerCase();
-            const btns = [];
+        function getLanguageGridCurrentValue(selectEl) {
             const firstUsableOption = Array.from(selectEl.options || []).find(opt => !opt.disabled && opt.value);
-            const hasAutoOption = !!selectEl.querySelector('option[value="auto"]');
-            const current = selectEl.value || (hasAutoOption ? 'auto' : (firstUsableOption ? firstUsableOption.value : defaultTargetLang));
+            if (selectEl.value) return selectEl.value;
+            if (selectEl.querySelector('option[value="auto"]')) return 'auto';
+            return firstUsableOption ? firstUsableOption.value : defaultTargetLang;
+        }
 
-            const pushBtn = (code, name) => {
-                const active = code === current;
-                btns.push(`<button data-code="${code}" style="
+        function getLanguageGridOptions(selectEl, customOptions) {
+            if (customOptions && customOptions.length) {
+                return customOptions.map(({ value, label }) => ({ code: value, name: label }));
+            }
+            return Array.from(selectEl.options)
+                .filter(option => !option.disabled && option.value)
+                .map(option => ({ code: option.value, name: option.textContent || getLanguageLabel(option.value) }));
+        }
+
+        function languageGridOptionMatchesQuery(option, query) {
+            if (!query) return true;
+            const name = String(option.name || '').toLowerCase();
+            const code = String(option.code || '').toLowerCase();
+            return name.includes(query) || code.includes(query);
+        }
+
+        function buildLanguageGridButton(option, current, style) {
+            const active = option.code === current;
+            return `<button data-code="${option.code}" style="
                 padding:6px 8px;
                 text-align:left;
                 border-radius:8px;
@@ -3335,62 +4210,58 @@ limitations under the License.
                 cursor:pointer;
                 font-size:12px;
                 transition:background 0.15s ease, border 0.15s ease;
-            ">${name}</button>`);
-            };
+            ">${option.name}</button>`;
+        }
 
-            if (customOptions && customOptions.length) {
-                customOptions.forEach(({ value, label }) => {
-                    const code = value;
-                    const name = label;
-                    if (query && !name.toLowerCase().includes(query) && !code.toLowerCase().includes(query)) return;
-                    pushBtn(code, name);
-                });
-            } else {
-                const entries = Array.from(selectEl.options)
-                    .filter(option => !option.disabled && option.value)
-                    .map(option => [option.value, option.textContent || getLanguageLabel(option.value)]);
-                entries.forEach(([code, name]) => {
-                    if (query && !name.toLowerCase().includes(query) && !code.toLowerCase().includes(query)) return;
-                    pushBtn(code, name);
-                });
+        function updateLanguageGridCurrentLabel(currentLabelEl, code) {
+            if (currentLabelEl === fullscreenSourceLangCurrent) {
+                updateFullscreenSourceCurrentLabel();
+            } else if (currentLabelEl === fullscreenTargetLangCurrent) {
+                updateFullscreenTargetCurrentLabel();
+            } else if (currentLabelEl) {
+                currentLabelEl.textContent = getLanguageLabel(code);
             }
+        }
 
-            gridEl.innerHTML = btns.join('');
+        function applyLanguageGridSelection(code, selectEl) {
+            stopSpeaking();
+            selectEl.value = code;
+            if (selectEl === fullscreenTargetLangSelect) {
+                const validTarget = ensureFullscreenTargetLanguageValid(code);
+                currentResolvedTargetLang = resolveTargetLanguageValue(validTarget, currentResolvedTargetLang || defaultTargetLang);
+            } else if (selectEl === fullscreenSourceLangSelect && code !== 'auto') {
+                detectedSourceLang = code;
+            }
+        }
+
+        function bindLanguageGridButtons(gridEl, searchEl, selectEl, currentLabelEl, panelEl, customOptions) {
             gridEl.querySelectorAll('button').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const code = btn.getAttribute('data-code');
                     if (!code || !selectEl.querySelector(`option[value="${code}"]`)) return;
-                    stopSpeaking();
-                    selectEl.value = code;
-
-                    if (selectEl === fullscreenTargetLangSelect) {
-                        const validTarget = ensureFullscreenTargetLanguageValid(code);
-                        currentResolvedTargetLang = resolveTargetLanguageValue(validTarget, currentResolvedTargetLang || defaultTargetLang);
-                    } else if (selectEl === fullscreenSourceLangSelect && code !== 'auto') {
-                        detectedSourceLang = code;
-                    }
-
-                    if (currentLabelEl === fullscreenSourceLangCurrent) {
-                        updateFullscreenSourceCurrentLabel();
-                    } else if (currentLabelEl === fullscreenTargetLangCurrent) {
-                        updateFullscreenTargetCurrentLabel();
-                    } else if (currentLabelEl) {
-                        currentLabelEl.textContent = getLanguageLabel(code);
-                    }
-                    renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl);
+                    applyLanguageGridSelection(code, selectEl);
+                    updateLanguageGridCurrentLabel(currentLabelEl, code);
+                    renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl, customOptions);
                     if (panelEl) panelEl.style.display = 'none';
                     if (selectEl === fullscreenTargetLangSelect || selectEl === fullscreenSourceLangSelect) {
                         scheduleFullscreenTranslate(0, 'language');
                     }
                 });
             });
-            if (currentLabelEl === fullscreenSourceLangCurrent) {
-                updateFullscreenSourceCurrentLabel();
-            } else if (currentLabelEl === fullscreenTargetLangCurrent) {
-                updateFullscreenTargetCurrentLabel();
-            } else if (currentLabelEl) {
-                currentLabelEl.textContent = getLanguageLabel(current);
-            }
+        }
+
+        function renderLanguageGrid(gridEl, searchEl, selectEl, currentLabelEl, panelEl, customOptions) {
+            if (!gridEl || !selectEl) return;
+            const style = getLanguagePanelThemeStyles();
+            applyLanguagePanelContainerTheme(panelEl, searchEl);
+            const query = (searchEl && searchEl.value || '').toLowerCase();
+            const current = getLanguageGridCurrentValue(selectEl);
+            const buttons = getLanguageGridOptions(selectEl, customOptions)
+                .filter(option => languageGridOptionMatchesQuery(option, query))
+                .map(option => buildLanguageGridButton(option, current, style));
+            gridEl.innerHTML = buttons.join('');
+            bindLanguageGridButtons(gridEl, searchEl, selectEl, currentLabelEl, panelEl, customOptions);
+            updateLanguageGridCurrentLabel(currentLabelEl, current);
         }
 
         if (fullscreenSourceCopy) fullscreenSourceCopy.addEventListener('click', () => {
@@ -3399,8 +4270,8 @@ limitations under the License.
             navigator.clipboard.writeText(text);
             const svg = fullscreenSourceCopy.querySelector('svg');
             if (svg) {
-                svg.style.stroke = COPY_FEEDBACK_STROKE;
-                setTimeout(() => { svg.style.stroke = getIconDefaultStrokeColor(); }, 900);
+                setButtonIconStroke(fullscreenSourceCopy, COPY_FEEDBACK_STROKE);
+                setTimeout(() => { applyIconThemeColors(); }, 900);
             }
         });
 
@@ -3410,8 +4281,8 @@ limitations under the License.
             navigator.clipboard.writeText(text);
             const svg = fullscreenTargetCopy.querySelector('svg');
             if (svg) {
-                svg.style.stroke = COPY_FEEDBACK_STROKE;
-                setTimeout(() => { svg.style.stroke = getIconDefaultStrokeColor(); }, 900);
+                setButtonIconStroke(fullscreenTargetCopy, COPY_FEEDBACK_STROKE);
+                setTimeout(() => { applyIconThemeColors(); }, 900);
             }
         });
 
@@ -3536,20 +4407,20 @@ limitations under the License.
         });
 
         document.addEventListener('mousedown', (e) => {
-            if (selectionBubble && !selectionBubble.contains(e.target)) {
+            if (selectionBubble && !eventPathContains(e, selectionBubble)) {
                 hideBubbleCloseMenu();
             }
-            if (fullscreenSourceLangPanel && !fullscreenSourceLangPanel.contains(e.target) && fullscreenSourceLangTrigger && !fullscreenSourceLangTrigger.contains(e.target)) {
+            if (fullscreenSourceLangPanel && !eventPathContains(e, fullscreenSourceLangPanel) && fullscreenSourceLangTrigger && !eventPathContains(e, fullscreenSourceLangTrigger)) {
                 fullscreenSourceLangPanel.style.display = 'none';
             }
-            if (fullscreenTargetLangPanel && !fullscreenTargetLangPanel.contains(e.target) && fullscreenTargetLangTrigger && !fullscreenTargetLangTrigger.contains(e.target)) {
+            if (fullscreenTargetLangPanel && !eventPathContains(e, fullscreenTargetLangPanel) && fullscreenTargetLangTrigger && !eventPathContains(e, fullscreenTargetLangTrigger)) {
                 fullscreenTargetLangPanel.style.display = 'none';
             }
-            if (panelThemePanel && !panelThemePanel.contains(e.target) && panelThemeTrigger && !panelThemeTrigger.contains(e.target)) {
+            if (panelThemePanel && !eventPathContains(e, panelThemePanel) && panelThemeTrigger && !eventPathContains(e, panelThemeTrigger)) {
                 panelThemePanel.style.display = 'none';
             }
             inlineLanguagePanels.forEach(({ panel, selectEl }) => {
-                if (!panel.contains(e.target) && !selectEl.contains(e.target)) {
+                if (!eventPathContains(e, panel) && !eventPathContains(e, selectEl)) {
                     panel.style.display = 'none';
                 }
             });
@@ -3578,6 +4449,7 @@ limitations under the License.
             inlineLanguagePanels.forEach(({ panel, selectEl }) => {
                 positionInlinePanel(panel, selectEl);
             });
+            positionThemePanel();
         }
 
         function buildInlinePanel(selectEl, placeholder = langNames.navigator) {
@@ -3603,7 +4475,7 @@ limitations under the License.
             const searchEl = panel.querySelector('.inlineLangSearch');
             applyLanguagePanelContainerTheme(panel, searchEl);
             panel.classList.add("utst-scroll");
-            document.documentElement.appendChild(panel);
+            utstUiRoot.appendChild(panel);
             inlineLanguagePanels.push({ panel, selectEl });
             return panel;
         }
@@ -3660,6 +4532,13 @@ limitations under the License.
         attachInlineLanguagePanel(toolLanguageSelect);
         refreshLanguagePanelTheme();
 
+        [translationBox, settingsPanel, fullscreenOverlay, fullscreenPanel].forEach((scrollEl) => {
+            if (!scrollEl) return;
+            scrollEl.addEventListener('scroll', () => {
+                updateInlinePanelsPosition();
+            }, { passive: true });
+        });
+
         if (fullscreenToggle) fullscreenToggle.addEventListener('click', openFullscreenOverlay);
         if (fullscreenClose) fullscreenClose.addEventListener('click', closeFullscreenOverlay);
         const closeButton = translationBox.querySelector('#closeButton');
@@ -3688,9 +4567,6 @@ limitations under the License.
             detectedSourceLang = 'auto';
             stopSpeaking();
 
-            const translatorPanel = document.getElementById('translatorPanel');
-            const settingsPanel = document.getElementById('settingsPanel');
-
             if (translatorPanel) translatorPanel.style.display = 'block';
             if (settingsPanel) settingsPanel.style.display = 'none';
             if (settingsHeader) settingsHeader.style.display = 'none';
@@ -3700,8 +4576,6 @@ limitations under the License.
 
         settingsButton.addEventListener('click', () => {
             lockPanelDimensions();
-            const translatorPanel = document.getElementById('translatorPanel');
-            const settingsPanel = document.getElementById('settingsPanel');
 
             if (translatorPanel) translatorPanel.style.display = 'none';
             if (settingsPanel) settingsPanel.style.display = 'block';
@@ -3713,9 +4587,6 @@ limitations under the License.
 
 
         backButton.addEventListener('click', () => {
-            const translatorPanel = document.getElementById('translatorPanel');
-            const settingsPanel = document.getElementById('settingsPanel');
-
             if (translatorPanel) translatorPanel.style.display = 'block';
             if (settingsPanel) settingsPanel.style.display = 'none';
 
@@ -3727,34 +4598,48 @@ limitations under the License.
 
 
 
-        document.addEventListener('mousedown', (e) => {
-            const clickInInlinePanel = inlineLanguagePanels.some(({ panel, selectEl }) =>
-                panel.contains(e.target) || selectEl.contains(e.target)
+        function isClickInInlineLanguagePanel(event) {
+            return inlineLanguagePanels.some(({ panel, selectEl }) =>
+                eventPathContains(event, panel) || eventPathContains(event, selectEl)
             );
-            const clickInFullscreenLangPanel =
-                (fullscreenSourceLangPanel && fullscreenSourceLangPanel.contains(e.target)) ||
-                (fullscreenTargetLangPanel && fullscreenTargetLangPanel.contains(e.target)) ||
-                (fullscreenSourceLangTrigger && fullscreenSourceLangTrigger.contains(e.target)) ||
-                (fullscreenTargetLangTrigger && fullscreenTargetLangTrigger.contains(e.target));
-            const clickInFullscreenOverlay = fullscreenOverlay && fullscreenOverlay.contains(e.target);
-            const clickInSelectionBubble = selectionBubble && selectionBubble.contains(e.target);
+        }
 
-            if (clickInInlinePanel || clickInFullscreenLangPanel || clickInFullscreenOverlay || clickInSelectionBubble) return;
+        function isClickInFullscreenLanguagePanel(event) {
+            return [fullscreenSourceLangPanel, fullscreenTargetLangPanel, fullscreenSourceLangTrigger, fullscreenTargetLangTrigger]
+                .some(el => el && eventPathContains(event, el));
+        }
 
-            if (!translationBox.contains(e.target)) {
-                panelTranslateRequestId++;
-                setPanelLoading(false);
-                translationBox.style.display = 'none';
-                translationBox.style.opacity = '0';
-                translationBox.style.transform = 'translateY(10px)';
-                sourceLangSelect.value = 'auto';
-                detectedSourceLang = 'auto';
-                if (settingsHeader) settingsHeader.style.display = 'none';
-                translationBox.classList.remove('utst-settings-open');
-                stopSpeaking();
-                scheduleSelectionBubbleUpdate(0);
-            }
-        });
+        function isClickInProtectedOverlay(event) {
+            return !!(
+                isClickInInlineLanguagePanel(event) ||
+                isClickInFullscreenLanguagePanel(event) ||
+                (fullscreenOverlay && eventPathContains(event, fullscreenOverlay)) ||
+                (selectionBubble && eventPathContains(event, selectionBubble)) ||
+                (panelThemePanel && eventPathContains(event, panelThemePanel)) ||
+                (panelThemeTrigger && eventPathContains(event, panelThemeTrigger))
+            );
+        }
+
+        function closeTranslationBoxFromOutside() {
+            panelTranslateRequestId++;
+            setPanelLoading(false);
+            translationBox.style.display = 'none';
+            translationBox.style.opacity = '0';
+            translationBox.style.transform = 'translateY(10px)';
+            sourceLangSelect.value = 'auto';
+            detectedSourceLang = 'auto';
+            if (settingsHeader) settingsHeader.style.display = 'none';
+            translationBox.classList.remove('utst-settings-open');
+            stopSpeaking();
+            scheduleSelectionBubbleUpdate(0);
+        }
+
+        function handleOutsideMouseDown(event) {
+            if (isClickInProtectedOverlay(event) || eventPathContains(event, translationBox)) return;
+            closeTranslationBoxFromOutside();
+        }
+
+        document.addEventListener('mousedown', handleOutsideMouseDown);
 
         function adjustBoxPosition() {
             const rect = translationBox.getBoundingClientRect();
@@ -3800,7 +4685,13 @@ limitations under the License.
             scheduleSelectionBubbleUpdate();
         });
 
-        window.addEventListener('scroll', () => {
+        window.addEventListener('scroll', (e) => {
+            if (isFullscreenOpen()) {
+                return;
+            }
+            if (translationBox.style.display !== 'block' && e.target !== document && e.target !== document.documentElement) {
+                return;
+            }
             updateInlinePanelsPosition();
             scheduleSelectionBubbleUpdate(0);
         }, true);
