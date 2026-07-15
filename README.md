@@ -7,9 +7,8 @@
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/DREwX-code/Ultimate-Text-Selection-Translator?style=flat-square&label=Code%20quality&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/drewx-code/ultimate-text-selection-translator)
 <p>
 <strong><a href="https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text">
-Ultimate Text Selection Translator
-</a></strong>
-is a powerful Tampermonkey userscript that allows you to instantly translate any selected text on any website using a simple keyboard shortcut.
+Ultimate Text Selection Translator</a></strong>
+ is a powerful Tampermonkey userscript that allows you to instantly translate any selected text on any website using a customizable keyboard shortcut or the built-in floating translation button.
 No copy-paste, no external tools: translation happens directly on the page.
 </p>
 <p align="center">
@@ -23,7 +22,7 @@ No copy-paste, no external tools: translation happens directly on the page.
 
 <h3>Translation</h3>
 <ul>
-  <li>Instant translation of any selected text using the default shortcut: <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong></li>
+  <li>Instant translation using a customizable keyboard shortcut (default: <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong>)</li>
   <li>Automatic source language detection</li>
   <li>Translation into the browser’s default language</li>
   <li>One-click translation button directly on text selection</li>
@@ -61,13 +60,16 @@ You can also use the automatic selection button that appears at the end of highl
 </p>
 
 
-## Install
+## Installation
 
-You can install the script by following the instructions  
-[Installation guide](https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/blob/main/Install%20this%20script.md)
+[![Install](https://img.shields.io/badge/Install-Ultimate%20Text%20Selection%20Translator-2f7d32?style=for-the-badge&logo=greasyfork&logoColor=white)](https://update.greasyfork.org/scripts/536284/Ultimate%20Text%20Selection%20Translator%20-%20Instantly%20Translate%20Any%20Selected%20Text.user.js)
+[![View Source](https://img.shields.io/badge/View-Source%20Code-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/blob/main/Ultimate%20Text%20Selection%20Translator.user.js)
 
-### Direct installation
-[![Install on GreasyFork](https://img.shields.io/badge/Install-GreasyFork-960000?style=for-the-badge)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
+1. Install a userscript manager such as **Tampermonkey** (recommended) or **Violentmonkey**.
+2. Click **Install Ultimate Text Selection Translator** above or install it from [GreasyFork](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text).
+3. Select any text on a webpage and translate it instantly using either the keyboard shortcut or the floating translation button.
+
+For detailed installation instructions, see the **[Installation Guide](./INSTALLATION.md)**.
 
 ## Technical Information
 
@@ -76,7 +78,7 @@ You can install the script by following the instructions
 </p>
 
 <p>
-The script uses <code>translate.googleapis.com</code> to process translation requests.
+The script uses `translate.googleapis.com` for translation requests. All translations are performed directly from your browser without requiring an API key.
 </p>
 
 
