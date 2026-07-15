@@ -23,7 +23,7 @@ No copy-paste, no external tools: translation happens directly on the page.
 
 <h3>Translation</h3>
 <ul>
-  <li>Instant translation of any selected text using <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong></li>
+  <li>Instant translation of any selected text using the default shortcut: <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong></li>
   <li>Automatic source language detection</li>
   <li>Translation into the browser’s default language</li>
   <li>One-click translation button directly on text selection</li>
@@ -37,6 +37,7 @@ No copy-paste, no external tools: translation happens directly on the page.
 
 <h3>Customization</h3>
 <ul>
+  <li>Customizable translation keyboard shortcut</li>
   <li>Global theme system (Blue, Dark, Light)</li>
   <li>Per-site control with built-in blacklist</li>
 </ul>
@@ -51,7 +52,8 @@ No copy-paste, no external tools: translation happens directly on the page.
 ## Usage
 
 <p>
-Select any text on a webpage and press <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong> to instantly translate it without leaving the page.
+Select any text on a webpage and use your configured keyboard shortcut to instantly translate it without leaving the page.
+The default shortcut is <strong><kbd>Ctrl</kbd> + <kbd>L</kbd></strong>, and it can be changed from the script settings.
 </p>
 
 <p>
