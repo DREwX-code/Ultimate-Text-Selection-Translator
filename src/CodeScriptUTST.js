@@ -95,7 +95,7 @@
 // @connect      translate.googleapis.com
 // @match        *://*/*
 // @run-at       document-start
-// @version      1.4.2
+// @version      1.4.3
 // @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
 // @tag          translation
 // @tag          text selection
@@ -297,6 +297,8 @@ limitations under the License.
 
             #utstSelectionBubble {
                 position: absolute;
+                top: 0;
+                left: 0;
                 z-index: 2147483647;
                 display: flex;
                 align-items: center;
@@ -1329,7 +1331,8 @@ limitations under the License.
             host.id = 'utstShadowHost';
             setImportantStyle(host, 'all', 'initial');
             setImportantStyle(host, 'position', 'static');
-            setImportantStyle(host, 'display', 'contents');
+            // Prevent a flash of unstyled controls while the isolated UI is built.
+            setImportantStyle(host, 'display', 'none');
             setImportantStyle(host, 'font-size', '14px');
             setImportantStyle(host, 'line-height', 'normal');
             setImportantStyle(host, 'color', '#fff');
@@ -1361,8 +1364,32 @@ limitations under the License.
         }
 
 
-        const translationLibrary = (typeof window !== 'undefined' ? window.TraductionOutilTranslator : null)
-            || (typeof globalThis !== 'undefined' ? globalThis.TraductionOutilTranslator : null);
+        function getTranslationLibrary() {
+            return (typeof window !== 'undefined' ? window.TraductionOutilTranslator : null)
+                || (typeof globalThis !== 'undefined' ? globalThis.TraductionOutilTranslator : null);
+        }
+
+        function getSupportedUiLanguages(library, availableLanguageNames) {
+            return Array.isArray(library.supportedUiLanguages) && library.supportedUiLanguages.length
+                ? library.supportedUiLanguages
+                : Object.keys(availableLanguageNames);
+        }
+
+        function normalizeInitialToolLanguage(preference, supportedLanguages) {
+            return preference === 'browser' || supportedLanguages.includes(preference)
+                ? preference
+                : 'browser';
+        }
+
+        function getLocalizedValue(localizedValues, fallbackValues, key) {
+            return localizedValues[key] || fallbackValues[key];
+        }
+
+        function getLanguageName(localizedLanguageNames, code, fallback) {
+            return localizedLanguageNames[code] || fallback;
+        }
+
+        const translationLibrary = getTranslationLibrary();
         if (!translationLibrary || !translationLibrary.languageNames) {
             console.error('[Ultimate Translator] Missing TraductionOutilTranslator language library.');
             return;
@@ -1370,15 +1397,11 @@ limitations under the License.
 
         const browserLang = navigator.language.split('-')[0];
         const languageNames = translationLibrary.languageNames;
-        const englishLangNames = languageNames.en || {};
-        const supportedUiLanguages = Array.isArray(translationLibrary.supportedUiLanguages) && translationLibrary.supportedUiLanguages.length
-            ? translationLibrary.supportedUiLanguages
-            : Object.keys(languageNames);
+        const englishLangNames = getLanguageName(languageNames, 'en', {});
+        const supportedUiLanguages = getSupportedUiLanguages(translationLibrary, languageNames);
 
         const storedToolLangPref = GM_getValue('defaultToolLang', 'browser');
-        const normalizedToolLangPref = (storedToolLangPref === 'browser' || supportedUiLanguages.includes(storedToolLangPref))
-            ? storedToolLangPref
-            : 'browser';
+        const normalizedToolLangPref = normalizeInitialToolLanguage(storedToolLangPref, supportedUiLanguages);
         if (normalizedToolLangPref !== storedToolLangPref) {
             GM_setValue('defaultToolLang', normalizedToolLangPref);
         }
@@ -1395,24 +1418,24 @@ limitations under the License.
         let langNames = languageNames[uiLang];
         let errors = langNames.errors;
         let tooltips = langNames.tooltips;
-        let dragHandleLabel = langNames.dragHandleLabel || languageNames.en.dragHandleLabel;
-        let overlayLabels = langNames.overlay || languageNames.en.overlay;
-        let settingsTitle = langNames.settingsTitle || languageNames.en.settingsTitle;
-        let settingsDefaultLabel = langNames.settingsDefaultLabel || languageNames.en.settingsDefaultLabel;
-        let settingsToolLabel = langNames.settingsToolLabel || languageNames.en.settingsToolLabel;
+        let dragHandleLabel = getLocalizedValue(langNames, languageNames.en, 'dragHandleLabel');
+        let overlayLabels = getLocalizedValue(langNames, languageNames.en, 'overlay');
+        let settingsTitle = getLocalizedValue(langNames, languageNames.en, 'settingsTitle');
+        let settingsDefaultLabel = getLocalizedValue(langNames, languageNames.en, 'settingsDefaultLabel');
+        let settingsToolLabel = getLocalizedValue(langNames, languageNames.en, 'settingsToolLabel');
 
         const languages = [
-            { code: 'auto', name: englishLangNames.auto || langNames.auto },
-            { code: 'en', name: englishLangNames.en || 'English' },
-            { code: 'fr', name: englishLangNames.fr || 'French' },
-            { code: 'es', name: englishLangNames.es || 'Spanish' },
-            { code: 'de', name: englishLangNames.de || 'German' },
-            { code: 'it', name: englishLangNames.it || 'Italian' },
-            { code: 'pt', name: englishLangNames.pt || 'Portuguese' },
-            { code: 'ru', name: englishLangNames.ru || 'Russian' },
-            { code: 'zh-CN', name: englishLangNames['zh-CN'] || 'Chinese (Simplified)' },
-            { code: 'ja', name: englishLangNames.ja || 'Japanese' },
-            { code: 'navigator', name: englishLangNames.navigator || 'Browser language' }
+            { code: 'auto', name: getLanguageName(englishLangNames, 'auto', langNames.auto) },
+            { code: 'en', name: getLanguageName(englishLangNames, 'en', 'English') },
+            { code: 'fr', name: getLanguageName(englishLangNames, 'fr', 'French') },
+            { code: 'es', name: getLanguageName(englishLangNames, 'es', 'Spanish') },
+            { code: 'de', name: getLanguageName(englishLangNames, 'de', 'German') },
+            { code: 'it', name: getLanguageName(englishLangNames, 'it', 'Italian') },
+            { code: 'pt', name: getLanguageName(englishLangNames, 'pt', 'Portuguese') },
+            { code: 'ru', name: getLanguageName(englishLangNames, 'ru', 'Russian') },
+            { code: 'zh-CN', name: getLanguageName(englishLangNames, 'zh-CN', 'Chinese (Simplified)') },
+            { code: 'ja', name: getLanguageName(englishLangNames, 'ja', 'Japanese') },
+            { code: 'navigator', name: getLanguageName(englishLangNames, 'navigator', 'Browser language') }
         ];
 
         const googleTranslateLanguages = {
@@ -1530,15 +1553,21 @@ limitations under the License.
         const defaultTargetLang = languages.some(lang => lang.code === browserLang && lang.code !== 'auto') ? browserLang : 'en';
 
         const commonFavoriteTargetLangs = ['en', 'fr', 'es', 'de', 'it', 'pt', 'ru', 'zh-CN', 'ja'];
-        const favoriteTargetLangs = ['navigator'];
-        if (googleTranslateLanguages[browserLang] && !favoriteTargetLangs.includes(browserLang)) {
-            favoriteTargetLangs.push(browserLang);
-        }
-        commonFavoriteTargetLangs.forEach(code => {
-            if (!favoriteTargetLangs.includes(code)) {
-                favoriteTargetLangs.push(code);
+
+        function buildFavoriteTargetLanguages() {
+            const favorites = ['navigator'];
+            if (googleTranslateLanguages[browserLang] && !favorites.includes(browserLang)) {
+                favorites.push(browserLang);
             }
-        });
+            commonFavoriteTargetLangs.forEach(code => {
+                if (!favorites.includes(code)) {
+                    favorites.push(code);
+                }
+            });
+            return favorites;
+        }
+
+        const favoriteTargetLangs = buildFavoriteTargetLanguages();
         const sortedGoogleLanguageEntries = Object.entries(googleTranslateLanguages)
             .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
 
@@ -1783,11 +1812,11 @@ limitations under the License.
         </select>
 
         <label id="shortcutCaptureLabel" for="shortcutCaptureButton" style="color:#fff; font-size:14px; display:block; margin:12px 0 4px;">
-        ${langNames.settingsShortcutLabel || languageNames.en.settingsShortcutLabel}
+        ${getLocalizedValue(langNames, languageNames.en, 'settingsShortcutLabel')}
         </label>
         <div class="utst-shortcut-control">
             <button id="shortcutCaptureButton" class="utst-shortcut-capture" type="button"></button>
-            <button id="shortcutResetButton" class="utst-shortcut-reset" type="button" title="${langNames.settingsShortcutReset || languageNames.en.settingsShortcutReset}">↺</button>
+            <button id="shortcutResetButton" class="utst-shortcut-reset" type="button" title="${getLocalizedValue(langNames, languageNames.en, 'settingsShortcutReset')}">↺</button>
         </div>
         <div id="shortcutCaptureHelp" class="utst-shortcut-help"></div>
 
@@ -2244,7 +2273,11 @@ limitations under the License.
             code: 'KeyL',
             displayKey: 'L'
         });
-        const currentSiteHost = normalizeHostname(window.location.hostname || window.location.host || '');
+        function getCurrentSiteHost() {
+            return normalizeHostname(window.location.hostname || window.location.host || '');
+        }
+
+        const currentSiteHost = getCurrentSiteHost();
         let selectionBubbleEnabled = GM_getValue(BUBBLE_ENABLED_KEY, true) !== false;
         let selectionBubbleBlacklist = loadBubbleBlacklist();
         let currentPanelTheme = normalizePanelTheme(GM_getValue(PANEL_THEME_KEY, 'blue'));
@@ -3309,13 +3342,14 @@ limitations under the License.
             refreshTargetLanguageSelects();
         }
 
-        const initialTargetLang = getSavedTargetLanguage();
-        ensureSelectValue(targetLangSelect, initialTargetLang);
-        ensureSelectValue(defaultTranslateLangSelect, initialTargetLang);
-        currentResolvedTargetLang = initialTargetLang === 'navigator' ? browserLang : initialTargetLang;
-        if (toolLanguageSelect) {
-            toolLanguageSelect.value = toolLanguagePreference;
-        }
+        function initializeSettingsControls() {
+            const initialTargetLang = getSavedTargetLanguage();
+            ensureSelectValue(targetLangSelect, initialTargetLang);
+            ensureSelectValue(defaultTranslateLangSelect, initialTargetLang);
+            currentResolvedTargetLang = initialTargetLang === 'navigator' ? browserLang : initialTargetLang;
+            if (toolLanguageSelect) {
+                toolLanguageSelect.value = toolLanguagePreference;
+            }
 
         defaultTranslateLangSelect.addEventListener('change', () => {
             stopSpeaking();
@@ -3367,6 +3401,7 @@ limitations under the License.
             });
         }
 
+        function bindShortcutControls() {
         if (shortcutCaptureButton) {
             shortcutCaptureButton.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -3420,7 +3455,11 @@ limitations under the License.
                 saveShortcutSetting(cloneDefaultShortcut());
             });
         }
+        }
 
+        bindShortcutControls();
+
+        function bindSelectionBubbleControls() {
         if (selectionBubbleEnabledCheckbox) {
             selectionBubbleEnabledCheckbox.addEventListener('change', () => {
                 selectionBubbleEnabled = !!selectionBubbleEnabledCheckbox.checked;
@@ -3510,12 +3549,18 @@ limitations under the License.
                 openTranslationPanelForText(text, pos);
             });
         }
+        }
 
-        applyPanelTheme(currentPanelTheme);
-        applyToolLanguage(toolLanguagePreference);
-        syncSelectionBubbleSettingsUi();
-        refreshKeyboardLayoutMap();
-        scheduleSelectionBubbleUpdate(0);
+        bindSelectionBubbleControls();
+
+            applyPanelTheme(currentPanelTheme);
+            applyToolLanguage(toolLanguagePreference);
+            syncSelectionBubbleSettingsUi();
+            refreshKeyboardLayoutMap();
+            scheduleSelectionBubbleUpdate(0);
+        }
+
+        initializeSettingsControls();
 
 
 
@@ -4264,6 +4309,7 @@ limitations under the License.
             updateLanguageGridCurrentLabel(currentLabelEl, current);
         }
 
+        function bindFullscreenActionControls() {
         if (fullscreenSourceCopy) fullscreenSourceCopy.addEventListener('click', () => {
             const text = fullscreenSource.value || '';
             if (!text) return;
@@ -4316,6 +4362,9 @@ limitations under the License.
         if (fullscreenTargetLangSearch) fullscreenTargetLangSearch.addEventListener('input', () => {
             renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
         });
+        }
+
+        bindFullscreenActionControls();
 
         function markFullscreenResizeStart(e) {
             if (!e || !e.currentTarget) return;
@@ -4330,6 +4379,7 @@ limitations under the License.
             fullscreenTextareaLastSyncedHeight = fullscreenTextareaResizeStartHeight;
         }
 
+        function bindFullscreenInputControls() {
         if (fullscreenSource) fullscreenSource.addEventListener('pointerdown', markFullscreenResizeStart);
         if (fullscreenTarget) fullscreenTarget.addEventListener('pointerdown', markFullscreenResizeStart);
         if (fullscreenSource) fullscreenSource.addEventListener('input', () => scheduleFullscreenTranslate(250, 'translate'));
@@ -4346,6 +4396,9 @@ limitations under the License.
             updateFullscreenTargetCurrentLabel();
             scheduleFullscreenTranslate(0, 'language');
         });
+        }
+
+        bindFullscreenInputControls();
 
         function swapFullscreenContent() {
             if (!fullscreenSource || !fullscreenTarget || !fullscreenSourceLangSelect || !fullscreenTargetLangSelect) return;
@@ -4379,6 +4432,7 @@ limitations under the License.
             scheduleFullscreenTranslate(0, 'language');
         }
 
+        function bindFullscreenLanguageControls() {
         if (fullscreenSwap) {
             fullscreenSwap.addEventListener('click', () => {
                 swapFullscreenContent();
@@ -4405,6 +4459,9 @@ limitations under the License.
             togglePanel(fullscreenTargetLangPanel, fullscreenSourceLangPanel);
             renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
         });
+        }
+
+        bindFullscreenLanguageControls();
 
         document.addEventListener('mousedown', (e) => {
             if (selectionBubble && !eventPathContains(e, selectionBubble)) {
@@ -4701,6 +4758,8 @@ limitations under the License.
             hideSelectionBubble();
             scheduleSelectionBubbleUpdate(40);
         });
+
+        setImportantStyle(utstUi.host, 'display', 'contents');
     }
 
     if (document.body) {
