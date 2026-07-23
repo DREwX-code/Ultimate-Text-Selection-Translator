@@ -95,7 +95,7 @@
 // @connect      translate.googleapis.com
 // @match        *://*/*
 // @run-at       document-start
-// @version      1.4.3
+// @version      1.4.4
 // @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
 // @tag          translation
 // @tag          text selection
@@ -171,8 +171,6 @@ limitations under the License.
 
 
         const UTST_STYLE_TEXT = `
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
             :host {
                 all: initial !important;
                 position: static !important;
@@ -1331,8 +1329,10 @@ limitations under the License.
             host.id = 'utstShadowHost';
             setImportantStyle(host, 'all', 'initial');
             setImportantStyle(host, 'position', 'static');
+            setImportantStyle(host, 'display', 'contents');
             // Prevent a flash of unstyled controls while the isolated UI is built.
-            setImportantStyle(host, 'display', 'none');
+            setImportantStyle(host, 'visibility', 'hidden');
+            setImportantStyle(host, 'pointer-events', 'none');
             setImportantStyle(host, 'font-size', '14px');
             setImportantStyle(host, 'line-height', 'normal');
             setImportantStyle(host, 'color', '#fff');
@@ -1351,7 +1351,7 @@ limitations under the License.
 
             GM_addStyle(cssText);
             document.documentElement.appendChild(host);
-            return { host, root: document.documentElement, usesShadow: false };
+            return { host, root: host, usesShadow: false };
         }
 
         const utstUi = createIsolatedUiRoot(UTST_STYLE_TEXT);
@@ -4759,7 +4759,10 @@ limitations under the License.
             scheduleSelectionBubbleUpdate(40);
         });
 
-        setImportantStyle(utstUi.host, 'display', 'contents');
+        requestAnimationFrame(() => {
+            utstUi.host.style.removeProperty('visibility');
+            utstUi.host.style.removeProperty('pointer-events');
+        });
     }
 
     if (document.body) {
