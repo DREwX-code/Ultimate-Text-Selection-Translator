@@ -1,0 +1,25 @@
+{
+  "name": "ultimate-text-selection-translator",
+  "version": "1.4.4",
+  "description": "Instantly translate any selected text with customizable shortcuts, themes, and translation options.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DREwX-code/Ultimate-Text-Selection-Translator.git"
+  },
+  "keywords": [],
+  "author": "Dℝ∃wX",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/issues"
+  },
+  "homepage": "https://github.com/DREwX-code/Ultimate-Text-Selection-Translator#readme",
+  "devDependencies": {
+    "vite": "^8.1.5",
+    "vite-plugin-monkey": "^8.1.0"
+  }
+}
