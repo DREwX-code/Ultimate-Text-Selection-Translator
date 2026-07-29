@@ -1,6 +1,6 @@
 {
   "name": "ultimate-text-selection-translator",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Instantly translate any selected text with customizable shortcuts, themes, and translation options.",
   "scripts": {
     "dev": "vite",
