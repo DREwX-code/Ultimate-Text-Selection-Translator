@@ -20,6 +20,6 @@
   "homepage": "https://github.com/DREwX-code/Ultimate-Text-Selection-Translator#readme",
   "devDependencies": {
     "vite": "^8.2.2",
-    "vite-plugin-monkey": "^8.1.0"
+    "vite-plugin-monkey": "^8.1.1"
   }
 }
