@@ -610,8 +610,7 @@ function runUltimateTextSelectionTranslator() {
             isSupported: () => dictationService?.isSupported() || false,
             getState: () => dictationService?.getState() || { listening: false, targetId: null },
             toggleDictation: options => dictationService?.toggle(options) || false,
-            stopDictation: targetId => dictationService?.stop(targetId) || false,
-            updateDictationLanguage: (targetId, language) => dictationService?.updateLanguage(targetId, language) || false
+            stopDictation: targetId => dictationService?.stop(targetId) || false
         };
         const panelLayoutApi = { placeBoxAtSelection, restorePopupOverflow };
         const panelSelectionApi = {
@@ -750,7 +749,7 @@ function runUltimateTextSelectionTranslator() {
         function resolveSourceDictationLanguage(sourceValue, detectedLanguage = 'auto') {
             if (sourceValue && sourceValue !== 'auto') return sourceValue;
             if (detectedLanguage && detectedLanguage !== 'auto') return detectedLanguage;
-            return 'auto';
+            return browserLang || navigator.language || 'en-US';
         }
 
         function resolveTargetSpeechLanguage(targetValue, fallback = currentResolvedTargetLang) {

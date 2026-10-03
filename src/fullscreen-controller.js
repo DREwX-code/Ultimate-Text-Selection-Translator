@@ -70,9 +70,7 @@ export function createFullscreenController({
     const {
         isSupported: isDictationSupported = () => false,
         toggleDictation = () => false,
-        stopDictation = () => false,
-        getState: getDictationState = () => ({ listening: false, targetId: null }),
-        updateDictationLanguage = () => false
+        stopDictation = () => false
     } = dictationApi || {};
     const {
         lockPageScrollForFullscreen,
@@ -416,16 +414,13 @@ export function createFullscreenController({
             return;
         }
         setFullscreenLoading(true, reason === 'language' ? 'language' : 'translate');
-        cancelTranslation = translateText(text, srcLang, target, (translation, pos, resolvedTargetLang, error, detectedLanguage) => {
+        cancelTranslation = translateText(text, srcLang, target, (translation, pos, resolvedTargetLang, error, _detectedLanguage) => {
             if (requestId !== fullscreenTranslateRequestId) return;
             setFullscreenLoading(false, reason === 'language' ? 'language' : 'translate');
             fullscreenTarget.value = error ? '' : translation;
             errorStatus.textContent = error?.message || '';
             retry.hidden = !error;
             setCurrentResolvedTargetLanguage(resolvedTargetLang || getCurrentResolvedTargetLanguage());
-            if (!error && srcLang === 'auto' && detectedLanguage && getDictationState().targetId === 'fullscreen-source') {
-                updateDictationLanguage('fullscreen-source', detectedLanguage);
-            }
             updateFullscreenSourceCurrentLabel();
             updateFullscreenTargetCurrentLabel();
         }, { x: 0, y: 0 });
@@ -477,10 +472,13 @@ export function createFullscreenController({
             const selectedSource = fullscreenSourceLangSelect ? fullscreenSourceLangSelect.value : 'auto';
             const detectedSource = getDetectedSourceLanguage();
             const recognitionLanguage = resolveSourceDictationLanguage(selectedSource, detectedSource);
+            const mobile = windowRef.matchMedia?.('(pointer: coarse) and (hover: none)').matches === true;
             toggleDictation({
                 targetId: 'fullscreen-source',
                 language: recognitionLanguage,
-                onTranscript: captureTextareaInsertion(fullscreenSource)
+                onTranscript: captureTextareaInsertion(fullscreenSource),
+                finalResultsOnly: mobile,
+                restartOnEnd: !mobile
             });
         });
 

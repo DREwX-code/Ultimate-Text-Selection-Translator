@@ -93,9 +93,13 @@ export function createPanelController({
     let sourceEditTimer = 0;
     let translatedTextIsManual = false;
     let lastPanelEditable = translationText;
+    let sourceTextIsComposing = false;
+    let translationTextIsComposing = false;
     const savedCaretPositions = new WeakMap();
     const retry = documentRef.createElement('button');
+    const panelSourceClear = translationBox.querySelector('#panelSourceClear');
     retry.type = 'button';
+    retry.className = 'utst-panel-retry';
     retry.textContent = '↻';
     retry.title = 'Retry / Réessayer';
     retry.setAttribute('aria-label', retry.title);
@@ -105,6 +109,15 @@ export function createPanelController({
     translationText.tabIndex = 0;
     translationText.setAttribute('dir', 'auto');
     translationText.setAttribute('aria-live', 'polite');
+
+    function readEditorText(element) {
+        return element.tagName === 'TEXTAREA' ? element.value : element.textContent;
+    }
+
+    function writeEditorText(element, text) {
+        if (element.tagName === 'TEXTAREA') element.value = text;
+        else element.textContent = text;
+    }
 
     function isRangeInElement(range, element) {
         if (!range || !element) return false;
@@ -124,6 +137,7 @@ export function createPanelController({
     }
 
     function rememberCaretPosition(element) {
+        if (element.tagName === 'TEXTAREA') return;
         const selection = windowRef.getSelection();
         const offsets = selection?.rangeCount ? getRangeOffsets(element, selection.getRangeAt(0)) : null;
         if (offsets) savedCaretPositions.set(element, offsets);
@@ -140,6 +154,15 @@ export function createPanelController({
     }
 
     function captureContenteditableInsertion(element) {
+        if (element.tagName === 'TEXTAREA') {
+            const initialText = element.value;
+            return transcript => {
+                const separator = initialText && !/\s$/.test(initialText) ? ' ' : '';
+                element.value = `${initialText}${separator}${transcript}`;
+                element.scrollTop = element.scrollHeight;
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+            };
+        }
         const text = element.textContent || '';
         const selection = windowRef.getSelection();
         const activeOffsets = selection?.rangeCount ? getRangeOffsets(element, selection.getRangeAt(0)) : null;
@@ -164,7 +187,14 @@ export function createPanelController({
     function togglePanelDictation(element, targetId, language, buttonEl) {
         if (!element || !isDictationSupported() || buttonEl?.disabled) return;
         const writeTranscript = captureContenteditableInsertion(element);
-        toggleDictation({ targetId, language, onTranscript: writeTranscript });
+        const mobile = isMobileEditor();
+        toggleDictation({
+            targetId,
+            language,
+            onTranscript: writeTranscript,
+            finalResultsOnly: mobile,
+            restartOnEnd: !mobile
+        });
     }
 
     function getAutoLanguageLabel() {
@@ -214,13 +244,25 @@ export function createPanelController({
             if (requestId !== panelTranslateRequestId) return;
             setPanelLoading(false, loadingMode);
             if (error) {
-                translationText.textContent = error.message;
+                writeEditorText(translationText, error.message);
                 translatedTextIsManual = false;
                 retry.hidden = false;
                 return;
             }
             callback(translation, pos, resolvedTargetLang);
         }, position);
+    }
+
+    function isMobileEditor() {
+        return windowRef.matchMedia?.('(pointer: coarse) and (hover: none)').matches === true;
+    }
+
+    function cancelMobileTranslationWhileEditing() {
+        if (!isMobileEditor()) return;
+        cancelTranslation();
+        panelTranslateRequestId++;
+        setPanelLoading(false);
+        retry.hidden = true;
     }
 
     function updateTranslatorTexts() {
@@ -239,8 +281,8 @@ export function createPanelController({
     }
 
     function updateNoTextErrorMessage(previousErrors) {
-        if (translationText && previousErrors && translationText.textContent === previousErrors.noText) {
-            translationText.textContent = getErrors().noText;
+        if (translationText && previousErrors && readEditorText(translationText) === previousErrors.noText) {
+            writeEditorText(translationText, getErrors().noText);
         }
     }
 
@@ -251,7 +293,7 @@ export function createPanelController({
         sourceLangSelect.value = 'auto';
         setDetectedSourceLanguage('auto');
         translatedTextIsManual = false;
-        if (panelSourceText) panelSourceText.textContent = (selectedText || '').trim();
+        if (panelSourceText) writeEditorText(panelSourceText, (selectedText || '').trim());
         syncCompactLanguageLabels();
 
         if (translatorPanel) translatorPanel.style.display = 'block';
@@ -269,7 +311,7 @@ export function createPanelController({
             cancelTranslation();
             panelTranslateRequestId++;
             setPanelLoading(false);
-            translationText.textContent = getErrors().noText;
+            writeEditorText(translationText, getErrors().noText);
             translatedTextIsManual = false;
             translationBox.style.display = 'block';
             setCurrentSelectedText('');
@@ -292,7 +334,7 @@ export function createPanelController({
             ? selectionPosition
             : { x: 0, y: 0 };
 
-        translationText.textContent = '';
+        writeEditorText(translationText, '');
         translatedTextIsManual = false;
         translationBox.style.display = 'block';
         placeBoxAtSelection(fallbackPosition);
@@ -301,7 +343,7 @@ export function createPanelController({
 
         runPanelTranslation(text, 'auto', targetLangForSession, (translation, pos, resolvedTargetLang) => {
             setCurrentTranslatedText(translation);
-            translationText.textContent = translation;
+            writeEditorText(translationText, translation);
             translatedTextIsManual = false;
             setCurrentResolvedTargetLanguage(resolvedTargetLang || getCurrentResolvedTargetLanguage());
             syncCompactLanguageLabels();
@@ -310,9 +352,9 @@ export function createPanelController({
         }, fallbackPosition, 'translate');
     }
 
-    function handleLanguageChange() {
+    function handleLanguageChange(keepMobileDictation = false) {
         stopSpeaking();
-        stopDictation();
+        if (keepMobileDictation !== true) stopDictation();
         const targetVal = targetLangSelect.value;
         setCurrentResolvedTargetLanguage(targetVal === 'navigator' ? getBrowserLanguage() : targetVal);
 
@@ -325,7 +367,7 @@ export function createPanelController({
         if (getCurrentSelectedText()) {
             runPanelTranslation(getCurrentSelectedText(), sourceVal, targetVal, (translation, pos, resolvedTargetLang) => {
                 setCurrentTranslatedText(translation);
-                translationText.textContent = translation;
+                writeEditorText(translationText, translation);
                 translatedTextIsManual = false;
                 setCurrentResolvedTargetLanguage(resolvedTargetLang || getCurrentResolvedTargetLanguage());
                 syncCompactLanguageLabels();
@@ -365,40 +407,76 @@ export function createPanelController({
             });
         });
 
-        if (panelSourceText) panelSourceText.addEventListener('input', () => {
-            const editedText = panelSourceText.textContent.trim();
+        function handleSourceTextInput() {
+            cancelMobileTranslationWhileEditing();
+            const editedText = readEditorText(panelSourceText).trim();
             setCurrentSelectedText(editedText);
             windowRef.clearTimeout(sourceEditTimer);
             if (!editedText) {
                 cancelTranslation();
                 panelTranslateRequestId++;
                 setCurrentTranslatedText('');
-                translationText.textContent = '';
+                writeEditorText(translationText, '');
                 sourceLangSelect.value = 'auto';
                 setDetectedSourceLanguage('auto');
                 translatedTextIsManual = false;
                 syncCompactLanguageLabels();
                 return;
             }
-            sourceEditTimer = windowRef.setTimeout(handleLanguageChange, 360);
+            sourceEditTimer = windowRef.setTimeout(() => handleLanguageChange(isMobileEditor()), 360);
+        }
+
+        function handleTranslationTextInput() {
+            cancelMobileTranslationWhileEditing();
+            if (isMobileEditor()) windowRef.clearTimeout(sourceEditTimer);
+            setCurrentTranslatedText(readEditorText(translationText).trim());
+            translatedTextIsManual = true;
+        }
+
+        [panelSourceText, translationText].filter(Boolean).forEach(element => {
+            element.addEventListener('beforeinput', event => {
+                cancelMobileTranslationWhileEditing();
+                if (isMobileEditor() && event.isTrusted) stopDictation();
+            });
         });
 
+        if (panelSourceText) {
+            panelSourceText.addEventListener('compositionstart', () => {
+                sourceTextIsComposing = true;
+                cancelMobileTranslationWhileEditing();
+            });
+            panelSourceText.addEventListener('compositionend', () => {
+                sourceTextIsComposing = false;
+                handleSourceTextInput();
+            });
+            panelSourceText.addEventListener('input', () => {
+                if (!sourceTextIsComposing) handleSourceTextInput();
+            });
+        }
+
+        translationText.addEventListener('compositionstart', () => {
+            translationTextIsComposing = true;
+            cancelMobileTranslationWhileEditing();
+        });
+        translationText.addEventListener('compositionend', () => {
+            translationTextIsComposing = false;
+            handleTranslationTextInput();
+        });
         translationText.addEventListener('input', () => {
-            setCurrentTranslatedText(translationText.textContent.trim());
-            translatedTextIsManual = true;
+            if (!translationTextIsComposing) handleTranslationTextInput();
         });
 
         function promoteManualTranslationToSource(sourceLanguage = null) {
             if (!translatedTextIsManual) return false;
-            const manualText = translationText.textContent.trim();
+            const manualText = readEditorText(translationText).trim();
             if (!manualText) return false;
             const nextSourceLanguage = sourceLanguage || getCurrentResolvedTargetLanguage() || getBrowserLanguage();
             ensureSelectValue(sourceLangSelect, nextSourceLanguage);
             setDetectedSourceLanguage(nextSourceLanguage);
             setCurrentSelectedText(manualText);
             setCurrentTranslatedText('');
-            if (panelSourceText) panelSourceText.textContent = manualText;
-            translationText.textContent = '';
+            if (panelSourceText) writeEditorText(panelSourceText, manualText);
+            writeEditorText(translationText, '');
             translatedTextIsManual = false;
             syncCompactLanguageLabels();
             return true;
@@ -424,9 +502,9 @@ export function createPanelController({
 
                 if (translatedTextValue) {
                     setCurrentSelectedText(translatedTextValue);
-                    if (panelSourceText) panelSourceText.textContent = translatedTextValue;
+                    if (panelSourceText) writeEditorText(panelSourceText, translatedTextValue);
                     setCurrentTranslatedText(originalText);
-                    translationText.textContent = originalText;
+                    writeEditorText(translationText, originalText);
                 }
                 translatedTextIsManual = false;
 
@@ -514,6 +592,15 @@ export function createPanelController({
                 resolveSourceDictationLanguage(sourceLangSelect.value, getDetectedSourceLanguage()),
                 panelSourceDictate
             );
+        });
+
+        if (panelSourceClear) panelSourceClear.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            stopDictation('panel-source');
+            writeEditorText(panelSourceText, '');
+            panelSourceText.focus({ preventScroll: true });
+            panelSourceText.dispatchEvent(new Event('input', { bubbles: true }));
         });
 
         if (panelDictate) panelDictate.addEventListener('click', () => {

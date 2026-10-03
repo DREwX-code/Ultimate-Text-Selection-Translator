@@ -1770,18 +1770,34 @@ export const UTST_STYLE_TEXT = `
                     padding-top: 56px !important;
                 }
                 #utstTranslationBox:not(.utst-settings-open) {
-                    height: auto !important;
+                    height: min(380px, calc(var(--utst-vh, 100dvh) - 20px)) !important;
                     max-height: calc(var(--utst-vh, 100dvh) - 20px) !important;
-                    overflow-y: auto !important;
+                    overflow: hidden !important;
                 }
                 #utstTranslationBox:not(.utst-settings-open) #translatorPanel {
-                    height: auto !important; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+                    height: 100% !important;
+                    min-height: 0 !important;
+                    overflow: hidden !important;
+                    overscroll-behavior: contain;
+                    scrollbar-width: thin;
+                }
+                #utstTranslationBox.utst-mobile-keyboard-open:not(.utst-settings-open) {
+                    height: calc(var(--utst-vh, 100dvh) - 20px) !important;
+                    max-height: calc(var(--utst-vh, 100dvh) - 20px) !important;
+                    overflow: hidden !important;
+                    padding-top: 52px !important;
+                    padding-bottom: 8px !important;
+                }
+                #utstTranslationBox.utst-mobile-keyboard-open:not(.utst-settings-open) #translatorPanel {
+                    height: 100% !important;
+                    min-height: 0 !important;
+                    overflow: hidden !important;
                 }
                 #utstTranslationBox.utst-settings-open { height: min(530px, calc(var(--utst-vh, 100dvh) - 20px)) !important; }
                 #panelLanguageRow { margin-bottom: 8px !important; }
                 #panelSourceSection {
-                    display: flex; flex-direction: column; flex: 0 1 auto; min-height: 70px; max-height: 160px;
-                    border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 8px;
+                    display: flex; flex: 1 1 0; flex-direction: column; min-height: 0; max-height: none;
+                    overflow: hidden; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 8px;
                 }
                 #panelSourceActions {
                     display: flex; flex: 0 0 auto; justify-content: flex-end; align-items: center;
@@ -1795,21 +1811,32 @@ export const UTST_STYLE_TEXT = `
                     display: none !important;
                 }
                 #panelSourceText {
-                    flex: 0 1 auto; min-height: 48px; max-height: 130px; overflow: auto; padding: 8px 2px 4px;
-                    line-height: 1.45; overflow-wrap: anywhere; unicode-bidi: plaintext; scrollbar-width: thin;
+                    flex: 1 1 0; min-width: 0; min-height: 0; width: 100%; height: auto; max-height: none;
+                    overflow: auto !important; padding: 8px 2px 4px; line-height: 1.45; white-space: pre-wrap;
+                    overflow-wrap: anywhere; unicode-bidi: plaintext; writing-mode: horizontal-tb; scrollbar-width: thin;
+                    overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;
                 }
-                #translationTextWrap { flex: 0 1 auto; }
+                #translationTextWrap {
+                    display: flex !important; flex: 1 1 0; flex-direction: column; min-width: 0; min-height: 0;
+                    overflow: hidden;
+                }
                 #utstTranslationBox #translationText,
                 html.utst-theme-blue #utstTranslationBox #translationText,
                 html.utst-theme-light #utstTranslationBox #translationText {
-                    min-height: 62px !important; max-height: 180px !important;
-                    padding: 8px 2px 4px !important; background: transparent !important;
-                    border: 0 !important; border-radius: 0 !important;
+                    display: block !important; flex: 1 1 0; min-width: 0; min-height: 0 !important; width: 100% !important;
+                    height: auto !important; max-height: none !important; overflow: auto !important; white-space: pre-wrap !important;
+                    overflow-wrap: anywhere; writing-mode: horizontal-tb; overscroll-behavior: contain;
+                    -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 8px 2px 4px !important;
+                    background: transparent !important; border: 0 !important; border-radius: 0 !important;
                 }
                 #panelTargetSectionHead { display: none !important; }
                 #panelTextActions { padding-top: 2px; min-height: 34px; }
                 #panelTextActions > div:last-child { margin-left: auto; }
                 #panelTextActions #fullscreenToggle { display: none !important; }
+                #translationTextWrap > .utst-panel-retry {
+                    flex: 0 0 auto; align-self: flex-end; width: 28px; min-width: 28px; height: 28px;
+                    min-height: 28px; margin: 0 2px 0 0; padding: 0; line-height: 1; border-radius: 8px;
+                }
                 #panelSpeakControl.utst-speak-menu-open #speakTooltip { display: flex !important; }
                 #shortcutCaptureLabel, .utst-shortcut-control, #shortcutCaptureHelp { display: none !important; }
                 #settingsPanel label[for="shortcutCaptureButton"] { display: none !important; }
@@ -1822,6 +1849,29 @@ export const UTST_STYLE_TEXT = `
                 #panelSourceActions button:hover, #panelTextActions :is(#speakButton, #copyButton):hover { opacity: 1; }
                 #panelSourceActions button:active, #panelTextActions :is(#speakButton, #copyButton):active { transform: scale(.9); }
                 #panelSourceActions button svg, #panelTextActions :is(#speakButton, #copyButton) svg { width: 18px !important; height: 18px !important; }
+                #utstTranslationBox textarea.utst-mobile-editor {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    min-width: 0 !important;
+                    box-sizing: border-box !important;
+                    resize: none !important;
+                    border: 0 !important;
+                    border-radius: 0 !important;
+                    background: transparent !important;
+                    color: inherit !important;
+                    font-family: inherit !important;
+                    font-size: 16px !important;
+                    line-height: 1.45 !important;
+                    white-space: pre-wrap !important;
+                    overflow-wrap: anywhere !important;
+                    writing-mode: horizontal-tb !important;
+                    overflow-y: auto !important;
+                    touch-action: pan-y !important;
+                    user-select: text !important;
+                    -webkit-user-select: text !important;
+                }
+                #panelSourceDictate:not(:disabled) { opacity: 1 !important; }
+                #panelTextActions #panelDictate { display: none !important; }
                 #panelSourceText:focus, #translationText:focus,
                 #panelSourceText:focus-visible, #translationText:focus-visible {
                     outline: none !important; box-shadow: none !important;
@@ -1835,6 +1885,9 @@ export const UTST_STYLE_TEXT = `
                     cursor: not-allowed !important;
                     opacity: .72 !important;
                 }
+            }
+            @media (pointer: coarse) and (hover: none) {
+                #panelSourceClear { display: grid !important; margin-right: auto; }
             }
             :host(.utst-theme-light) #fullscreenOverlay.utst-side-panel #fullscreenPanel .utst-fullscreen-actions > :is(div, button) {
                 border: 0 !important;

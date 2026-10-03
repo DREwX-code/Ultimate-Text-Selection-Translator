@@ -96,6 +96,11 @@ export function createTranslationBoxView({
             <span id="panelSourceLanguageLabel" hidden>${langNames.auto}</span>
             <div id="panelSourceText" dir="auto" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true"></div>
             <div id="panelSourceActions" aria-label="Source actions">
+                <button id="panelSourceClear" type="button" title="Clear source text" aria-label="Clear source text" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18"></path>
+                    </svg>
+                </button>
                 <button id="panelSourceDictate" class="utst-dictate-button" type="button" title="Start dictation" aria-label="Start dictation" aria-pressed="false">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect x="9" y="3" width="6" height="11" rx="3"></rect>
@@ -246,6 +251,22 @@ export function createTranslationBoxView({
 
 
     `;
+    const windowRef = documentRef.defaultView;
+    const mobile = windowRef?.matchMedia('(pointer: coarse), (max-width: 640px)').matches;
+    if (mobile) {
+        for (const id of ['panelSourceText', 'translationText']) {
+            const original = translationBox.querySelector(`#${id}`);
+            const textarea = documentRef.createElement('textarea');
+            textarea.id = id;
+            textarea.className = 'utst-mobile-editor';
+            textarea.style.cssText = original.style.cssText;
+            textarea.dir = 'auto';
+            textarea.rows = 4;
+            textarea.spellcheck = true;
+            textarea.setAttribute('aria-label', id === 'panelSourceText' ? 'Source text' : 'Translation');
+            original.replaceWith(textarea);
+        }
+    }
     translationBox.classList.add("utst-scroll");
     return translationBox;
 }

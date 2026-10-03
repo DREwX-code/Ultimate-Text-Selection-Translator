@@ -47,6 +47,8 @@ export function createLayoutController({
     let preferredSidePanelWidth = loadSidePanelWidth();
     let popupOverflowSnapshot = null;
     let popupPositionBeforeFullscreen = null;
+    let mobileViewportWidth = 0;
+    let mobileViewportHeight = 0;
 
     function isMobilePopupViewport() {
         return windowRef.matchMedia?.('(pointer: coarse) and (hover: none)').matches;
@@ -54,6 +56,19 @@ export function createLayoutController({
 
     function isSidePanelViewport() {
         return !isMobilePopupViewport() && windowRef.innerWidth >= 700;
+    }
+
+    function isMobileKeyboardOpen(viewport) {
+        if (!isMobilePopupViewport()) return false;
+        const width = Math.round(viewport.width);
+        const height = Math.round(viewport.height);
+        if (!mobileViewportWidth || Math.abs(width - mobileViewportWidth) > 40) {
+            mobileViewportWidth = width;
+            mobileViewportHeight = height;
+            return false;
+        }
+        mobileViewportHeight = Math.max(mobileViewportHeight, height);
+        return mobileViewportHeight - height >= 120;
     }
 
     function getSidePanelWidth() {
@@ -154,6 +169,7 @@ export function createLayoutController({
             const host = translationBox.getRootNode().host || translationBox.parentElement;
             host.style.setProperty('--utst-vw', `${view.width}px`);
             host.style.setProperty('--utst-vh', `${view.height}px`);
+            translationBox.classList.toggle('utst-mobile-keyboard-open', isMobileKeyboardOpen(view));
             const visualViewport = windowRef.visualViewport;
             fullscreenOverlay.style.setProperty('top', `${visualViewport?.offsetTop || 0}px`, 'important');
             fullscreenOverlay.style.setProperty('left', `${visualViewport?.offsetLeft || 0}px`, 'important');

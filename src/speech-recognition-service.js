@@ -38,16 +38,25 @@ export function createSpeechRecognitionService({
             : getBrowserRecognitionLanguage();
     }
 
+    function getInterimTranscript(results) {
+        return [...results.entries()]
+            .sort(([left], [right]) => left - right)
+            .reduce((text, [, transcript]) => appendTranscript(text, transcript), '');
+    }
+
+    function clearRestartTimer() {
+        if (!restartTimer) return;
+        clearTimer(restartTimer);
+        restartTimer = null;
+    }
+
     function stop(targetId) {
         if (!session || (targetId && session.targetId !== targetId)) return false;
         const activeRecognition = recognition;
         const activeTargetId = session.targetId;
         sessionVersion++;
         session.shouldListen = false;
-        if (restartTimer) {
-            clearTimer(restartTimer);
-            restartTimer = null;
-        }
+        clearRestartTimer();
         recognition = null;
         session = null;
         try {
@@ -65,26 +74,37 @@ export function createSpeechRecognitionService({
         const activeVersion = sessionVersion;
         const instance = new Recognition();
         recognition = instance;
+        activeSession.finalResults = new Map();
+        activeSession.interimResults = new Map();
+
         const recognitionLanguage = getRecognitionLanguage(activeSession.language);
         if (recognitionLanguage) instance.lang = recognitionLanguage;
         instance.continuous = true;
-        instance.interimResults = true;
+        instance.interimResults = !activeSession.finalResultsOnly;
         instance.maxAlternatives = 1;
 
         instance.onresult = event => {
             if (session !== activeSession || activeVersion !== sessionVersion || !activeSession.shouldListen) return;
-            let finalSegment = '';
-            let interimSegment = '';
-            for (let index = 0; index < event.results.length; index++) {
-                const result = event.results[index];
-                const transcript = result?.[0]?.transcript || '';
-                if (result?.isFinal) finalSegment = appendTranscript(finalSegment, transcript);
-                else interimSegment = appendTranscript(interimSegment, transcript);
+            const resultIndex = Number.isInteger(event?.resultIndex) ? event.resultIndex : 0;
+            const results = event?.results || [];
+            for (let index = resultIndex; index < results.length; index++) {
+                const result = results[index];
+                const transcript = String(result?.[0]?.transcript || '').trim();
+                if (!transcript || activeSession.finalResults.has(index)) continue;
+                if (result?.isFinal) {
+                    activeSession.finalResults.set(index, transcript);
+                    activeSession.interimResults.delete(index);
+                    activeSession.committedTranscript = appendTranscript(activeSession.committedTranscript, transcript);
+                } else if (!activeSession.finalResultsOnly) {
+                    activeSession.interimResults.set(index, transcript);
+                }
             }
-            activeSession.finalSegment = finalSegment;
-            activeSession.interimSegment = interimSegment;
-            const completed = appendTranscript(activeSession.committedTranscript, finalSegment);
-            activeSession.onTranscript(appendTranscript(completed, interimSegment).trim());
+            const nextTranscript = activeSession.finalResultsOnly
+                ? activeSession.committedTranscript
+                : appendTranscript(activeSession.committedTranscript, getInterimTranscript(activeSession.interimResults));
+            if (nextTranscript === activeSession.lastEmittedTranscript) return;
+            activeSession.lastEmittedTranscript = nextTranscript;
+            activeSession.onTranscript(nextTranscript);
         };
 
         instance.onerror = event => {
@@ -106,13 +126,7 @@ export function createSpeechRecognitionService({
         instance.onend = () => {
             if (session !== activeSession || activeVersion !== sessionVersion) return;
             recognition = null;
-            activeSession.committedTranscript = appendTranscript(
-                activeSession.committedTranscript,
-                activeSession.finalSegment || activeSession.interimSegment
-            );
-            activeSession.finalSegment = '';
-            activeSession.interimSegment = '';
-            if (!activeSession.shouldListen) {
+            if (!activeSession.shouldListen || !activeSession.restartOnEnd) {
                 session = null;
                 notify(false, activeSession.targetId);
                 return;
@@ -135,7 +149,14 @@ export function createSpeechRecognitionService({
         }
     }
 
-    function start({ targetId, language, onTranscript, onError }) {
+    function start({
+        targetId,
+        language,
+        onTranscript,
+        onError,
+        finalResultsOnly = false,
+        restartOnEnd = true
+    }) {
         stop();
         if (!isSupported() || !targetId || typeof onTranscript !== 'function') {
             onError?.('unsupported');
@@ -143,37 +164,21 @@ export function createSpeechRecognitionService({
         }
         sessionVersion++;
         session = {
-            version: sessionVersion,
             targetId,
             language,
             onTranscript,
             onError,
+            finalResultsOnly,
+            restartOnEnd,
             usedBrowserLanguageFallback: false,
             shouldListen: true,
             committedTranscript: '',
-            finalSegment: '',
-            interimSegment: ''
+            finalResults: new Map(),
+            interimResults: new Map(),
+            lastEmittedTranscript: ''
         };
         notify(true, targetId);
         beginRecognition();
-        return true;
-    }
-
-    function updateLanguage(targetId, language) {
-        if (!session || session.targetId !== targetId || !session.shouldListen) return false;
-        const nextLanguage = getRecognitionLanguage(language);
-        if (getRecognitionLanguage(session.language) === nextLanguage) return false;
-        session.language = nextLanguage;
-        session.usedBrowserLanguageFallback = false;
-        if (restartTimer) {
-            clearTimer(restartTimer);
-            restartTimer = null;
-        }
-        try {
-            recognition?.abort?.();
-        } catch {
-            recognition?.stop?.();
-        }
         return true;
     }
 
@@ -186,5 +191,5 @@ export function createSpeechRecognitionService({
         return { listening: !!session?.shouldListen, targetId: session?.targetId || null };
     }
 
-    return { getState, isSupported, start, stop, toggle, updateLanguage };
+    return { getState, isSupported, start, stop, toggle };
 }
