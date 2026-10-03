@@ -1,19 +1,29 @@
+import { userscriptApi } from './userscript-api.js';
+import { buildTranslationChunks } from './text-segmentation.js';
 export function createSpeechService({
-    request = GM_xmlhttpRequest,
+    request = userscriptApi.xmlHttpRequest,
     browserLanguage,
     createAudio = source => new Audio(source),
     createObjectUrl = blob => URL.createObjectURL(blob),
     revokeObjectUrl = url => URL.revokeObjectURL(url),
     createAudioBlob = response => new Blob([response], { type: 'audio/mpeg' }),
+    allowBlobAudioFallback = false,
+    createAudioContext = () => {
+        const AudioContextConstructor = globalThis.AudioContext || globalThis.webkitAudioContext;
+        return AudioContextConstructor ? new AudioContextConstructor() : null;
+    },
     onStateChange
 }) {
     let currentSpeakerId = null;
     let speechPlaying = false;
     let activeSpeechAudio = null;
     let activeSpeechAudioUrl = null;
+    let audioContext = null;
+    let activeSpeechBufferSource = null;
     let speechQueue = [];
     let speechFetchRequest = null;
     let speechRequestToken = 0;
+    let speechFetchTimeout = null;
 
     function notifyStateChange() {
         onStateChange({
@@ -27,6 +37,12 @@ export function createSpeechService({
     }
 
     function clearActiveSpeechAudio() {
+        if (activeSpeechBufferSource) {
+            activeSpeechBufferSource.onended = null;
+            try { activeSpeechBufferSource.stop(0); } catch { /* Source may already have ended. */ }
+            try { activeSpeechBufferSource.disconnect(); } catch { /* Source may already be disconnected. */ }
+            activeSpeechBufferSource = null;
+        }
         if (activeSpeechAudio) {
             activeSpeechAudio.onended = null;
             activeSpeechAudio.onerror = null;
@@ -40,8 +56,64 @@ export function createSpeechService({
         }
     }
 
+    function getAudioContext() {
+        if (audioContext) return audioContext;
+        try {
+            audioContext = createAudioContext();
+        } catch {
+            audioContext = null;
+        }
+        return audioContext;
+    }
+
+    function decodeAudioData(context, encodedAudio) {
+        return new Promise((resolve, reject) => {
+            let settled = false;
+            const finish = value => {
+                if (settled) return;
+                settled = true;
+                resolve(value);
+            };
+            const fail = error => {
+                if (settled) return;
+                settled = true;
+                reject(error);
+            };
+            try {
+                const decoding = context.decodeAudioData(encodedAudio, finish, fail);
+                if (decoding && typeof decoding.then === 'function') decoding.then(finish, fail);
+            } catch (error) {
+                fail(error);
+            }
+        });
+    }
+
+    async function playWithWebAudio(audioBlob, index, requestToken, langCandidates) {
+        const context = getAudioContext();
+        if (!context || !audioBlob?.arrayBuffer || typeof context.decodeAudioData !== 'function') return false;
+        try {
+            if (context.state === 'suspended') await context.resume?.();
+            const encodedAudio = await audioBlob.arrayBuffer();
+            const decodedAudio = await decodeAudioData(context, encodedAudio);
+            if (requestToken !== speechRequestToken) return true;
+            const source = context.createBufferSource();
+            source.buffer = decodedAudio;
+            source.connect(context.destination);
+            activeSpeechBufferSource = source;
+            source.onended = () => {
+                if (activeSpeechBufferSource === source) activeSpeechBufferSource = null;
+                playSpeechChunkAt(index + 1, requestToken, langCandidates);
+            };
+            source.start(0);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     function stopSpeaking() {
         speechRequestToken += 1;
+        clearTimeout(speechFetchTimeout);
         if (speechFetchRequest && typeof speechFetchRequest.abort === 'function') {
             speechFetchRequest.abort();
         }
@@ -77,46 +149,12 @@ export function createSpeechService({
         if (!normalized) return [];
         if (normalized.length <= maxChunkLength) return [normalized];
 
-        const chunks = [];
-        const sentences = normalized.match(/[^.!?]+[.!?]*/g) || [normalized];
-
-        sentences.forEach((sentenceRaw) => {
-            const sentence = sentenceRaw.trim();
-            if (!sentence) return;
-            if (sentence.length <= maxChunkLength) {
-                chunks.push(sentence);
-                return;
-            }
-            const words = sentence.split(' ');
-            let current = '';
-            words.forEach((word) => {
-                if (!word) return;
-                if (word.length > maxChunkLength) {
-                    if (current) {
-                        chunks.push(current);
-                        current = '';
-                    }
-                    for (let i = 0; i < word.length; i += maxChunkLength) {
-                        chunks.push(word.slice(i, i + maxChunkLength));
-                    }
-                    return;
-                }
-                const next = current ? `${current} ${word}` : word;
-                if (next.length > maxChunkLength) {
-                    if (current) chunks.push(current);
-                    current = word;
-                } else {
-                    current = next;
-                }
-            });
-            if (current) chunks.push(current);
-        });
-
-        return chunks.filter(Boolean);
+        return buildTranslationChunks(normalized, maxChunkLength);
     }
 
     function finishSpeechPlayback(requestToken) {
         if (requestToken !== speechRequestToken) return;
+        clearTimeout(speechFetchTimeout);
         speechFetchRequest = null;
         speechQueue = [];
         clearActiveSpeechAudio();
@@ -143,33 +181,46 @@ export function createSpeechService({
 
             const candidateLang = langCandidates[index];
             const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${encodeURIComponent(candidateLang)}&q=${encodeURIComponent(chunkText)}`;
-            speechFetchRequest = request({
-                method: 'GET',
-                url,
-                responseType: 'arraybuffer',
-                onload: (response) => {
-                    speechFetchRequest = null;
-                    if (requestToken !== speechRequestToken) {
-                        done(null);
-                        return;
+            clearTimeout(speechFetchTimeout);
+            speechFetchTimeout = setTimeout(() => {
+                const pending = speechFetchRequest;
+                finishSpeechPlayback(requestToken);
+                pending?.abort?.();
+            }, 12000);
+            try {
+                speechFetchRequest = request({
+                    method: 'GET',
+                    anonymous: true,
+                    url,
+                    responseType: 'arraybuffer',
+                    timeout: 12000,
+                    ontimeout: () => finishSpeechPlayback(requestToken),
+                    onload: (response) => {
+                        clearTimeout(speechFetchTimeout);
+                        speechFetchRequest = null;
+                        if (requestToken !== speechRequestToken) {
+                            done(null);
+                            return;
+                        }
+                        const status = Number(response.status) || 0;
+                        const hasAudio = response.response && response.response.byteLength > 0;
+                        if (status >= 200 && status < 300 && hasAudio) {
+                            done(createAudioBlob(response.response));
+                            return;
+                        }
+                        tryCandidate(index + 1);
+                    },
+                    onerror: () => {
+                        clearTimeout(speechFetchTimeout);
+                        speechFetchRequest = null;
+                        if (requestToken !== speechRequestToken) {
+                            done(null);
+                            return;
+                        }
+                        tryCandidate(index + 1);
                     }
-                    const status = Number(response.status) || 0;
-                    const hasAudio = response.response && response.response.byteLength > 0;
-                    if (status >= 200 && status < 300 && hasAudio) {
-                        done(createAudioBlob(response.response));
-                        return;
-                    }
-                    tryCandidate(index + 1);
-                },
-                onerror: () => {
-                    speechFetchRequest = null;
-                    if (requestToken !== speechRequestToken) {
-                        done(null);
-                        return;
-                    }
-                    tryCandidate(index + 1);
-                }
-            });
+                });
+            } catch { finishSpeechPlayback(requestToken); }
         };
 
         tryCandidate(0);
@@ -182,7 +233,7 @@ export function createSpeechService({
             return;
         }
 
-        fetchGoogleTtsChunk(speechQueue[index], langCandidates, requestToken, (audioBlob) => {
+        fetchGoogleTtsChunk(speechQueue[index], langCandidates, requestToken, async (audioBlob) => {
             if (requestToken !== speechRequestToken) return;
             if (!audioBlob) {
                 finishSpeechPlayback(requestToken);
@@ -190,6 +241,15 @@ export function createSpeechService({
             }
 
             clearActiveSpeechAudio();
+            if (await playWithWebAudio(audioBlob, index, requestToken, langCandidates)) return;
+            if (requestToken !== speechRequestToken) return;
+            // A page CSP often blocks media-src blob:. Web Audio is supported
+            // by the target browsers, so do not trigger a noisy CSP violation
+            // when decoding is unavailable. The legacy route is opt-in only.
+            if (!allowBlobAudioFallback) {
+                finishSpeechPlayback(requestToken);
+                return;
+            }
             activeSpeechAudioUrl = createObjectUrl(audioBlob);
             const audio = createAudio(activeSpeechAudioUrl);
             activeSpeechAudio = audio;
@@ -202,7 +262,7 @@ export function createSpeechService({
             const playPromise = audio.play();
             if (playPromise && typeof playPromise.catch === 'function') {
                 playPromise.catch(() => {
-                    playSpeechChunkAt(index + 1, requestToken, langCandidates);
+                    finishSpeechPlayback(requestToken);
                 });
             }
         });

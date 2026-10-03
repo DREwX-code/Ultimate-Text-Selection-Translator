@@ -109,6 +109,7 @@ export function createSettingsController({
         if (bubbleBlacklistLabel) bubbleBlacklistLabel.textContent = labels.blacklist;
         if (bubbleBlacklistAddButton) bubbleBlacklistAddButton.textContent = labels.blacklistAdd;
         if (settingsButton) settingsButton.title = settingsTitle;
+        if (settingsHeaderTitle) settingsHeaderTitle.title = settingsTitle;
     }
 
     function refreshToolLanguageSelect(normalizedSelection) {

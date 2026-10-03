@@ -1,6 +1,6 @@
+import { positionMenu } from './viewport.js';
 export function createThemeController({
     windowRef,
-    documentRef,
     host,
     translationBox,
     fullscreenOverlay,
@@ -8,6 +8,7 @@ export function createThemeController({
     copyButton,
     fullscreenToggle,
     settingsButton,
+    fullscreenSettings,
     backButton,
     fullscreenSwap,
     fullscreenSourceCopy,
@@ -64,7 +65,7 @@ export function createThemeController({
 
     function applyIconThemeColors() {
         const defaultStroke = getIconDefaultStrokeColor();
-        [speakButton, copyButton, fullscreenToggle, settingsButton, backButton, fullscreenSwap,
+        [speakButton, copyButton, fullscreenToggle, settingsButton, fullscreenSettings, backButton, fullscreenSwap,
             fullscreenSourceCopy, fullscreenSourceSpeak, fullscreenTargetCopy, fullscreenTargetSpeak
         ].forEach((buttonEl) => {
             if (!buttonEl) return;
@@ -196,6 +197,17 @@ export function createThemeController({
         }).join('');
 
         panelThemeGrid.querySelectorAll('button').forEach(btn => {
+            const restoreThemeAfterPreview = () => {
+                if (!windowRef.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+                const savedTheme = normalizePanelTheme(loadPanelTheme());
+                if (currentPanelTheme !== savedTheme) applyPanelTheme(savedTheme, { refreshThemePicker: false });
+            };
+            btn.addEventListener('pointerenter', () => {
+                if (!windowRef.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+                const previewTheme = normalizePanelTheme(btn.getAttribute('data-theme') || 'blue');
+                if (previewTheme !== currentPanelTheme) applyPanelTheme(previewTheme, { refreshThemePicker: false });
+            });
+            btn.addEventListener('pointerleave', restoreThemeAfterPreview);
             btn.addEventListener('click', () => {
                 const theme = btn.getAttribute('data-theme') || 'blue';
                 panelThemeSelect.value = normalizePanelTheme(theme);
@@ -205,25 +217,23 @@ export function createThemeController({
         });
     }
 
-    function refreshLanguagePanelTheme() {
+    function refreshLanguagePanelTheme({ refreshThemePicker = true } = {}) {
         refreshLanguagePanelsTheme({
             afterContainers: applyThemePanelContainerTheme,
             afterFullscreen: () => {
-                if (panelThemePanel && panelThemeGrid && (panelThemePanel.style.display === 'block' || panelThemeGrid.childElementCount > 0)) {
+                if (refreshThemePicker && panelThemePanel && panelThemeGrid && (panelThemePanel.style.display === 'block' || panelThemeGrid.childElementCount > 0)) {
                     renderThemePickerOptions();
                 }
             }
         });
     }
 
-    function applyPanelTheme(theme, { persist = false } = {}) {
+    function applyPanelTheme(theme, { persist = false, refreshThemePicker = true } = {}) {
         const normalizedTheme = normalizePanelTheme(theme);
         currentPanelTheme = normalizedTheme;
         if (persist) {
             savePanelTheme(normalizedTheme);
         }
-        documentRef.documentElement.classList.remove('utst-theme-blue', 'utst-theme-dark', 'utst-theme-light');
-        documentRef.documentElement.classList.add(`utst-theme-${normalizedTheme}`);
         if (host) {
             host.classList.remove('utst-theme-blue', 'utst-theme-dark', 'utst-theme-light');
             host.classList.add(`utst-theme-${normalizedTheme}`);
@@ -231,9 +241,13 @@ export function createThemeController({
         if (panelThemeSelect) {
             panelThemeSelect.value = normalizedTheme;
         }
+        const previewTextColor = normalizedTheme === 'light' ? '#203150' : (normalizedTheme === 'dark' ? '#f0f0f0' : '#ffffff');
+        panelThemeGrid?.querySelectorAll('button').forEach(button => {
+            button.style.color = previewTextColor;
+        });
         applyIconThemeColors();
         updateThemePickerCurrentLabel();
-        refreshLanguagePanelTheme();
+        refreshLanguagePanelTheme({ refreshThemePicker });
     }
 
     function applyCurrentPanelTheme() {
@@ -242,20 +256,10 @@ export function createThemeController({
 
     function positionThemePanel() {
         if (!panelThemePanel || panelThemePanel.style.display !== 'block' || !panelThemeTrigger) return;
-        const rect = panelThemeTrigger.getBoundingClientRect();
-        const scrollX = windowRef.scrollX || documentRef.documentElement.scrollLeft || 0;
-        const scrollY = windowRef.scrollY || documentRef.documentElement.scrollTop || 0;
-        const width = Math.round(rect.width || 260);
-        const panelWidth = Math.max(width, 220);
-        const left = Math.min(rect.left + scrollX, scrollX + windowRef.innerWidth - panelWidth - 10);
-        const top = rect.bottom + scrollY + 6;
         panelThemePanel.style.position = 'absolute';
-        panelThemePanel.style.left = `${Math.max(scrollX + 10, left)}px`;
-        panelThemePanel.style.top = `${top}px`;
-        panelThemePanel.style.right = 'auto';
-        panelThemePanel.style.width = `${panelWidth}px`;
-        panelThemePanel.style.maxWidth = `${Math.max(180, windowRef.innerWidth - 20)}px`;
+        panelThemePanel.style.width = '280px';
         panelThemePanel.style.zIndex = '2147483646';
+        positionMenu(panelThemePanel, panelThemeTrigger, windowRef);
     }
 
     function refreshThemeOptionsLabels() {

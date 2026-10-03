@@ -1,3 +1,4 @@
+import { positionMenu } from '../viewport.js';
 export function createLanguagePanels({
     windowRef,
     documentRef,
@@ -166,24 +167,37 @@ export function createLanguagePanels({
         });
     }
 
-    function togglePanel(panelEl, otherPanel) {
+    function togglePanel(panelEl) {
         if (!panelEl) return;
         const isOpen = panelEl.style.display === 'block';
         hideLanguagePanels();
         panelEl.style.display = isOpen ? 'none' : 'block';
     }
 
+    function positionFullscreenMenu(panel, trigger) {
+        if (!panel || panel.style.display !== 'block') return;
+        const overlay = root.querySelector('#fullscreenOverlay');
+        if (panel.parentElement !== overlay) overlay.appendChild(panel);
+        positionMenu(panel, trigger, windowRef);
+        const rect = overlay.getBoundingClientRect();
+        panel.style.left = `${parseFloat(panel.style.left) - windowRef.scrollX - rect.left}px`;
+        panel.style.top = `${parseFloat(panel.style.top) - windowRef.scrollY - rect.top}px`;
+        panel.style.right = 'auto';
+    }
+
     function bindFullscreenPanelTriggers() {
         if (fullscreenSourceLangTrigger) fullscreenSourceLangTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
-            togglePanel(fullscreenSourceLangPanel, fullscreenTargetLangPanel);
+            togglePanel(fullscreenSourceLangPanel);
             renderLanguageGrid(fullscreenSourceLangGrid, fullscreenSourceLangSearch, fullscreenSourceLangSelect, fullscreenSourceLangCurrent, fullscreenSourceLangPanel);
+            positionFullscreenMenu(fullscreenSourceLangPanel, fullscreenSourceLangTrigger);
         });
 
         if (fullscreenTargetLangTrigger) fullscreenTargetLangTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
-            togglePanel(fullscreenTargetLangPanel, fullscreenSourceLangPanel);
+            togglePanel(fullscreenTargetLangPanel);
             renderLanguageGrid(fullscreenTargetLangGrid, fullscreenTargetLangSearch, fullscreenTargetLangSelect, fullscreenTargetLangCurrent, fullscreenTargetLangPanel);
+            positionFullscreenMenu(fullscreenTargetLangPanel, fullscreenTargetLangTrigger);
         });
     }
 
@@ -195,9 +209,10 @@ export function createLanguagePanels({
             fullscreenTargetLangPanel.style.display = 'none';
         }
         if (beforeInline) beforeInline();
-        inlineLanguagePanels.forEach(({ panel, selectEl }) => {
-            if (!eventPathContains(event, panel) && !eventPathContains(event, selectEl)) {
+        inlineLanguagePanels.forEach(({ panel, selectEl, trigger }) => {
+            if (!eventPathContains(event, panel) && !eventPathContains(event, selectEl) && !eventPathContains(event, trigger)) {
                 panel.style.display = 'none';
+                trigger?.setAttribute('aria-expanded', 'false');
             }
         });
     }
@@ -206,24 +221,20 @@ export function createLanguagePanels({
         inlineLanguagePanels.forEach(p => {
             if (p.panel === except) return;
             p.panel.style.display = 'none';
+            p.trigger?.setAttribute('aria-expanded', 'false');
         });
     }
 
     function positionInlinePanel(panel, selectEl) {
         if (!panel || panel.style.display !== 'block' || !selectEl) return;
-        const rect = selectEl.getBoundingClientRect();
-        const scrollX = windowRef.scrollX || documentRef.documentElement.scrollLeft || 0;
-        const scrollY = windowRef.scrollY || documentRef.documentElement.scrollTop || 0;
-        const panelWidth = panel.offsetWidth || 280;
-        const left = Math.min(rect.left + scrollX, scrollX + windowRef.innerWidth - panelWidth - 10);
-        const top = rect.bottom + scrollY + 4;
-        panel.style.left = `${left}px`;
-        panel.style.top = `${top}px`;
+        positionMenu(panel, selectEl, windowRef);
     }
 
     function updateInlinePanelsPosition() {
-        inlineLanguagePanels.forEach(({ panel, selectEl }) => {
-            positionInlinePanel(panel, selectEl);
+        positionFullscreenMenu(fullscreenSourceLangPanel, fullscreenSourceLangTrigger);
+        positionFullscreenMenu(fullscreenTargetLangPanel, fullscreenTargetLangTrigger);
+        inlineLanguagePanels.forEach(({ panel, trigger }) => {
+            positionInlinePanel(panel, trigger);
         });
     }
 
@@ -258,6 +269,30 @@ export function createLanguagePanels({
     function attachInlineLanguagePanel(selectEl) {
         if (!selectEl) return;
         const panel = buildInlinePanel(selectEl);
+        // A real button receives taps; the native select remains the value/label model.
+        // Never intercept pointerdown: the browser must be free to start scrolling.
+        const picker = documentRef.createElement('div');
+        picker.className = 'utst-language-picker';
+        const trigger = documentRef.createElement('button');
+        trigger.id = `${selectEl.id}Trigger`;
+        trigger.type = 'button';
+        trigger.className = 'utst-language-trigger';
+        trigger.setAttribute('aria-haspopup', 'dialog');
+        panel.id = `${selectEl.id}Menu`;
+        trigger.setAttribute('aria-controls', panel.id);
+        const syncLabel = () => {
+            trigger.setAttribute('aria-label', selectEl.selectedOptions[0]?.textContent || getNavigatorPlaceholder());
+            trigger.setAttribute('aria-expanded', String(panel.style.display === 'block'));
+        };
+        for (const label of [...(selectEl.labels || [])]) label.htmlFor = trigger.id;
+        selectEl.before(picker);
+        picker.append(selectEl, trigger);
+        selectEl.tabIndex = -1;
+        selectEl.setAttribute('aria-hidden', 'true');
+        inlineLanguagePanels.find(entry => entry.panel === panel).trigger = trigger;
+        syncLabel();
+        selectEl.addEventListener('change', syncLabel);
+        trigger.addEventListener('focus', syncLabel);
         const searchEl = panel.querySelector('.inlineLangSearch');
         const gridEl = panel.querySelector('.inlineLangGrid');
 
@@ -289,21 +324,26 @@ export function createLanguagePanels({
             }
             render();
             panel.style.display = 'block';
-            positionInlinePanel(panel, selectEl);
+            positionInlinePanel(panel, trigger);
+            syncLabel();
         };
-
-        selectEl.addEventListener('pointerdown', openInlinePanel, { capture: true });
-        selectEl.addEventListener('mousedown', openInlinePanel);
-        selectEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                openInlinePanel(e);
-            }
+        let start = null;
+        let moved = false;
+        trigger.addEventListener('pointerdown', event => { start = { x: event.clientX, y: event.clientY }; moved = false; });
+        trigger.addEventListener('pointermove', event => {
+            if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) moved = true;
+        }, { passive: true });
+        trigger.addEventListener('pointercancel', () => { moved = true; start = null; });
+        trigger.addEventListener('click', event => {
+            if (moved && event.detail !== 0) { event.preventDefault(); return; }
+            openInlinePanel(event);
+            syncLabel();
         });
     }
 
     function isClickInInlineLanguagePanel(event) {
-        return inlineLanguagePanels.some(({ panel, selectEl }) =>
-            eventPathContains(event, panel) || eventPathContains(event, selectEl)
+        return inlineLanguagePanels.some(({ panel, selectEl, trigger }) =>
+            eventPathContains(event, panel) || eventPathContains(event, selectEl) || eventPathContains(event, trigger)
         );
     }
 

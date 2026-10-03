@@ -1,3 +1,4 @@
+import { getViewport, clampPosition } from './viewport.js';
 export function createSelectionController({
     windowRef,
     documentRef,
@@ -25,24 +26,26 @@ export function createSelectionController({
     clearTimer
 }) {
     let selectionBubbleUpdateTimer = null;
+    let selectionPointerSafetyTimer = null;
     let bubbleSelectedText = '';
     let bubbleSelectionPosition = null;
     let isSelectingPointer = false;
 
     function normalizeHostname(value) {
-        if (value == null) return '';
+        if (value === null || value === undefined) return '';
         let host = String(value).trim().toLowerCase();
         if (!host) return '';
         host = host.replace(/^\*\./, '');
         if (host.includes('://')) {
             try {
                 host = new URL(host).hostname.toLowerCase();
-            } catch (e) {
+            } catch {
                 host = host.split('://').pop();
             }
         }
         host = host.split('/')[0].split('?')[0].split('#')[0].split(':')[0];
         host = host.replace(/^www\./, '');
+        if (!/^[a-z0-9.-]+$/.test(host)) return '';
         return host;
     }
 
@@ -51,8 +54,11 @@ export function createSelectionController({
     }
 
     const currentSiteHost = getCurrentSiteHost();
-    let selectionBubbleEnabled = loadSelectionBubbleEnabled();
+    const isMobileBubbleLocked = () => windowRef.matchMedia?.('(pointer: coarse), (max-width: 640px)').matches
+        || windowRef.innerWidth <= 640;
+    let selectionBubbleEnabled = isMobileBubbleLocked() ? true : loadSelectionBubbleEnabled();
     let selectionBubbleBlacklist = loadBubbleBlacklist(normalizeHostname);
+    if (bubbleBlacklistInput && currentSiteHost) bubbleBlacklistInput.placeholder = currentSiteHost;
 
     function persistBubbleBlacklist() {
         saveBubbleBlacklist(selectionBubbleBlacklist);
@@ -97,7 +103,18 @@ export function createSelectionController({
     }
 
     function getSelectionContext() {
-        const sel = windowRef.getSelection();
+        let active = documentRef.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        if (active?.closest?.('#utstShadowHost') || active?.getRootNode()?.host?.id === 'utstShadowHost') return null;
+        if (active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && /^(text|search|url|tel)$/i.test(active.type)))) {
+            const start = active.selectionStart, end = active.selectionEnd;
+            if (Number.isInteger(start) && end > start) {
+                const rect = active.getBoundingClientRect();
+                return { text: active.value.slice(start, end), rect, position: { x: rect.left + windowRef.scrollX, y: rect.bottom + windowRef.scrollY } };
+            }
+        }
+        if (active?.tagName === 'INPUT') return null;
+        const sel = active?.getRootNode()?.getSelection?.() || windowRef.getSelection();
         if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
         const text = sel.toString().trim();
         if (!text) return null;
@@ -131,24 +148,12 @@ export function createSelectionController({
         if (!rect) return;
         const bubbleWidth = selectionBubble.offsetWidth || 120;
         const bubbleHeight = selectionBubble.offsetHeight || 38;
-        const scrollX = windowRef.scrollX || documentRef.documentElement.scrollLeft || 0;
-        const scrollY = windowRef.scrollY || documentRef.documentElement.scrollTop || 0;
-        const minLeft = scrollX + margin;
-        const maxLeft = scrollX + windowRef.innerWidth - bubbleWidth - margin;
-        const belowTop = rect.bottom + scrollY + 8;
-        const aboveTop = rect.top + scrollY - bubbleHeight - 8;
-        const maxTop = scrollY + windowRef.innerHeight - bubbleHeight - margin;
-        const minTop = scrollY + margin;
-        const anchorLeft = rect.right + scrollX - (bubbleWidth / 2);
-
-        let top = belowTop;
-        if (top > maxTop) {
-            top = Math.max(minTop, aboveTop);
-        }
-
-        const left = Math.min(Math.max(anchorLeft, minLeft), maxLeft);
-        selectionBubble.style.left = `${left}px`;
-        selectionBubble.style.top = `${Math.min(Math.max(top, minTop), maxTop)}px`;
+        const view = getViewport(windowRef);
+        const below = rect.bottom + windowRef.scrollY + 10;
+        const top = below + bubbleHeight > view.top + view.height - margin ? rect.top + windowRef.scrollY - bubbleHeight - 10 : below;
+        const position = clampPosition(rect.right + windowRef.scrollX - bubbleWidth / 2, top, bubbleWidth, bubbleHeight, view, margin);
+        selectionBubble.style.left = `${position.left}px`;
+        selectionBubble.style.top = `${position.top}px`;
     }
 
     function isSelectionInsideTool() {
@@ -180,6 +185,7 @@ export function createSelectionController({
             hideSelectionBubble();
             return;
         }
+        if (selectionBubble.contains(selectionBubble.getRootNode().activeElement)) return;
         const context = getSelectionContext();
         if (!context) {
             hideSelectionBubble();
@@ -206,6 +212,14 @@ export function createSelectionController({
             selectionBubbleUpdateTimer = null;
             updateSelectionBubble();
         }, delay);
+    }
+
+    function clearSelectionPointerState() {
+        isSelectingPointer = false;
+        if (selectionPointerSafetyTimer) {
+            clearTimer(selectionPointerSafetyTimer);
+            selectionPointerSafetyTimer = null;
+        }
     }
 
     function renderBubbleBlacklist() {
@@ -257,7 +271,20 @@ export function createSelectionController({
     function syncSelectionBubbleSettingsUi() {
         const labels = getSelectionBubbleUiLabels();
         if (selectionBubbleEnabledCheckbox) {
+            const mobileLocked = isMobileBubbleLocked();
+            if (mobileLocked) selectionBubbleEnabled = true;
             selectionBubbleEnabledCheckbox.checked = !!selectionBubbleEnabled;
+            selectionBubbleEnabledCheckbox.disabled = mobileLocked;
+            selectionBubbleEnabledCheckbox.closest('.utst-toggle-row')?.classList.toggle('utst-toggle-row--locked', mobileLocked);
+            if (mobileLocked) {
+                selectionBubbleEnabledCheckbox.style.setProperty('background', '#6f7680', 'important');
+                selectionBubbleEnabledCheckbox.style.setProperty('border-color', '#89919d', 'important');
+                selectionBubbleEnabledCheckbox.style.setProperty('box-shadow', 'none', 'important');
+            } else {
+                selectionBubbleEnabledCheckbox.style.removeProperty('background');
+                selectionBubbleEnabledCheckbox.style.removeProperty('border-color');
+                selectionBubbleEnabledCheckbox.style.removeProperty('box-shadow');
+            }
         }
         setButtonTitleAndAria(selectionBubbleClose, labels.closeTitle);
         setButtonTitleAndAria(selectionBubbleAction, labels.translateTitle);
@@ -271,12 +298,29 @@ export function createSelectionController({
     }
 
     function getSelectedText() {
-        return windowRef.getSelection().toString().trim();
+        return getSelectionContext()?.text || '';
+    }
+
+    function disableSelectionBubbleForCurrentSite() {
+        if (!currentSiteHost) return false;
+        if (!selectionBubbleBlacklist.includes(currentSiteHost)) {
+            selectionBubbleBlacklist.push(currentSiteHost);
+            selectionBubbleBlacklist.sort((a, b) => a.localeCompare(b));
+            persistBubbleBlacklist();
+        }
+        hideSelectionBubble();
+        syncSelectionBubbleSettingsUi();
+        return true;
     }
 
     function bindSelectionBubbleControls() {
         if (selectionBubbleEnabledCheckbox) {
             selectionBubbleEnabledCheckbox.addEventListener('change', () => {
+                if (isMobileBubbleLocked()) {
+                    selectionBubbleEnabled = true;
+                    syncSelectionBubbleSettingsUi();
+                    return;
+                }
                 selectionBubbleEnabled = !!selectionBubbleEnabledCheckbox.checked;
                 persistSelectionBubbleEnabled();
                 hideSelectionBubble();
@@ -286,7 +330,7 @@ export function createSelectionController({
 
         if (bubbleBlacklistAddButton) {
             const addBlacklistSite = () => {
-                const normalized = normalizeHostname(bubbleBlacklistInput ? bubbleBlacklistInput.value : '');
+                const normalized = normalizeHostname(bubbleBlacklistInput?.value || currentSiteHost);
                 if (!normalized) return;
                 if (!selectionBubbleBlacklist.includes(normalized)) {
                     selectionBubbleBlacklist.push(normalized);
@@ -314,12 +358,24 @@ export function createSelectionController({
             e.preventDefault();
         });
 
-        documentRef.addEventListener('mousedown', (e) => {
+        const beginSelectionInteraction = (e) => {
             if (e.button !== 0) return;
             if (eventPathContains(e, selectionBubble) || eventPathContains(e, translationBox) || eventPathContains(e, fullscreenOverlay)) return;
             isSelectingPointer = true;
             hideSelectionBubble();
-        }, true);
+            // Some embedded pages swallow pointerup after a text selection.
+            // Never leave the bubble permanently locked in that case.
+            if (selectionPointerSafetyTimer) clearTimer(selectionPointerSafetyTimer);
+            selectionPointerSafetyTimer = setTimer(() => {
+                selectionPointerSafetyTimer = null;
+                isSelectingPointer = false;
+                scheduleSelectionBubbleUpdate(0);
+            }, 480);
+        };
+        // Keep mouse events as a fallback: pages can proxy or suppress pointer
+        // events while preserving native text selection.
+        documentRef.addEventListener('pointerdown', beginSelectionInteraction, true);
+        documentRef.addEventListener('mousedown', beginSelectionInteraction, true);
 
         if (selectionBubbleClose) {
             selectionBubbleClose.addEventListener('click', (e) => {
@@ -327,19 +383,22 @@ export function createSelectionController({
                 if (!bubbleCloseMenu) return;
                 const isOpen = bubbleCloseMenu.classList.contains('utst-open');
                 bubbleCloseMenu.classList.toggle('utst-open', !isOpen);
+                if (!isOpen) {
+                    const view = getViewport(windowRef);
+                    const rect = selectionBubble.getBoundingClientRect();
+                    bubbleCloseMenu.style.left = `${Math.max(view.left + margin - rect.left - windowRef.scrollX, Math.min(0, view.left + view.width - margin - rect.left - windowRef.scrollX - bubbleCloseMenu.offsetWidth))}px`;
+                    bubbleCloseMenu.style.right = 'auto';
+                    bubbleCloseMenu.style.top = rect.bottom + bubbleCloseMenu.offsetHeight + 8 > (windowRef.visualViewport?.offsetTop || 0) + view.height ? 'auto' : 'calc(100% + 8px)';
+                    bubbleCloseMenu.style.bottom = bubbleCloseMenu.style.top === 'auto' ? 'calc(100% + 8px)' : 'auto';
+                }
             });
         }
+
 
         if (bubbleHideSiteButton) {
             bubbleHideSiteButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (currentSiteHost && !selectionBubbleBlacklist.includes(currentSiteHost)) {
-                    selectionBubbleBlacklist.push(currentSiteHost);
-                    selectionBubbleBlacklist.sort((a, b) => a.localeCompare(b));
-                    persistBubbleBlacklist();
-                }
-                hideSelectionBubble();
-                syncSelectionBubbleSettingsUi();
+                disableSelectionBubbleForCurrentSite();
                 scheduleSelectionBubbleUpdate(0);
             });
         }
@@ -347,6 +406,10 @@ export function createSelectionController({
         if (bubbleHideGlobalButton) {
             bubbleHideGlobalButton.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (isMobileBubbleLocked()) {
+                    hideSelectionBubble();
+                    return;
+                }
                 selectionBubbleEnabled = false;
                 persistSelectionBubbleEnabled();
                 syncSelectionBubbleSettingsUi();
@@ -374,11 +437,16 @@ export function createSelectionController({
             }
             scheduleSelectionBubbleUpdate();
         });
-        documentRef.addEventListener('mouseup', () => {
+        const finishSelectionInteraction = () => {
+            if (!isSelectingPointer && !selectionPointerSafetyTimer) return;
             onBeforeMouseUp();
-            isSelectingPointer = false;
-            scheduleSelectionBubbleUpdate();
-        }, true);
+            clearSelectionPointerState();
+            scheduleSelectionBubbleUpdate(180);
+        };
+        documentRef.addEventListener('pointerup', finishSelectionInteraction, true);
+        documentRef.addEventListener('mouseup', finishSelectionInteraction, true);
+        documentRef.addEventListener('pointercancel', () => { clearSelectionPointerState(); scheduleSelectionBubbleUpdate(180); }, true);
+        windowRef.addEventListener('blur', () => { clearSelectionPointerState(); hideSelectionBubble(); });
         documentRef.addEventListener('keyup', () => {
             scheduleSelectionBubbleUpdate();
         });
@@ -387,6 +455,7 @@ export function createSelectionController({
     return {
         bindSelectionBubbleControls,
         bindSelectionEvents,
+        disableSelectionBubbleForCurrentSite,
         getSelectionContext,
         hideBubbleCloseMenu,
         hideSelectionBubble,

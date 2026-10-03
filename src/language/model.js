@@ -143,21 +143,8 @@ export function createLanguageModel({ translationLibrary, browserLang }) {
         };
     }
 
-    function getDefaultTargetLanguage(localizedLanguageNames) {
-        const languages = [
-            { code: 'auto', name: getLanguageName(englishLangNames, 'auto', localizedLanguageNames.auto) },
-            { code: 'en', name: getLanguageName(englishLangNames, 'en', 'English') },
-            { code: 'fr', name: getLanguageName(englishLangNames, 'fr', 'French') },
-            { code: 'es', name: getLanguageName(englishLangNames, 'es', 'Spanish') },
-            { code: 'de', name: getLanguageName(englishLangNames, 'de', 'German') },
-            { code: 'it', name: getLanguageName(englishLangNames, 'it', 'Italian') },
-            { code: 'pt', name: getLanguageName(englishLangNames, 'pt', 'Portuguese') },
-            { code: 'ru', name: getLanguageName(englishLangNames, 'ru', 'Russian') },
-            { code: 'zh-CN', name: getLanguageName(englishLangNames, 'zh-CN', 'Chinese (Simplified)') },
-            { code: 'ja', name: getLanguageName(englishLangNames, 'ja', 'Japanese') },
-            { code: 'navigator', name: getLanguageName(englishLangNames, 'navigator', 'Browser language') }
-        ];
-        return languages.some(lang => lang.code === browserLang && lang.code !== 'auto') ? browserLang : 'en';
+    function getDefaultTargetLanguage() {
+        return googleTranslateLanguages[browserLang] ? browserLang : 'en';
     }
 
     function buildFavoriteTargetLanguages() {

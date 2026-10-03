@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width, initial-scale=1"><title>UTST local QA</title></head><body style="margin:24px;min-height:2400px"><h1>UTST QA</h1><p id="sample">Hello world. This is a test of selection translation.</p><textarea id="editor">Selected text in an editor.</textarea><div contenteditable="true">Editable paragraph with several words.</div><div id="shadow"></div><script>
+window.GM_getValue = (key, fallback) => fallback;
+window.GM_setValue = () => {};
+window.GM_addStyle = () => {};
+window.qaRequests = [];
+window.qaMenuCommands = [];
+window.qaRecognitionInstances = [];
+window.SpeechRecognition = class QaSpeechRecognition {
+  constructor() { qaRecognitionInstances.push(this); }
+  start() { this.started = true; }
+  abort() { this.aborted = true; this.onend?.(); }
+};
+window.GM_registerMenuCommand = (label, callback) => {
+  qaMenuCommands.push({label, callback});
+  return qaMenuCommands.length;
+};
+window.qaMode = 'success';
+window.GM_xmlhttpRequest = options => {
+  qaRequests.push(options.url);
+  const timer = setTimeout(() => {
+    if (qaMode === 'error') options.onerror();
+    else {
+      const query = new URL(options.url).searchParams.get('q');
+      const detected = /bonjour|fran[çc]ais/i.test(query) ? 'fr' : 'en';
+      const translated = query === 'Hello world. This is a test of selection translation.'
+        ? 'Bonjour le monde. Ceci est un test de traduction.'
+        : 'Traduction de test — مرحبا — 日本語';
+      options.onload({status:200,responseText:JSON.stringify([[[translated]],null,detected])});
+    }
+  }, 80);
+  return {abort(){clearTimeout(timer); options.onabort?.();}};
+};
+if (location.search.includes('modern')) {
+    const request = window.GM_xmlhttpRequest;
+    const registerMenuCommand = window.GM_registerMenuCommand;
+    window.GM = { getValue: async (key, fallback) => fallback, setValue: async () => {}, xmlHttpRequest: request, registerMenuCommand };
+    delete window.GM_getValue; delete window.GM_setValue; delete window.GM_xmlhttpRequest; delete window.GM_registerMenuCommand;
+}
+document.querySelector('#shadow').attachShadow({mode:'open'}).innerHTML = '<p>Text inside an open shadow root.</p>';
+</script><script charset="utf-8" src="../dist/UTST.user.js?qa=utf8"></script></body></html>

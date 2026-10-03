@@ -87,16 +87,18 @@
 // @author       Dℝ∃wX
 // @copyright    2025-2026 Dℝ∃wX
 // @license      Apache-2.0
-// @require      https://update.greasyfork.org/scripts/556911/1864194/UTST%20Translation%20Library.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM.xmlHttpRequest
+// @grant        GM.getValue
+// @grant        GM.registerMenuCommand
+// @grant        GM.setValue
 // @grant        GM_setValue
-// @grant        GM_addStyle
 // @connect      translate.googleapis.com
 // @match        *://*/*
-// @noframes
 // @run-at       document-start
-// @version      1.4.5
+// @version      1.5.0
 // @icon         https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png
 // @tag          translation
 // @tag          text selection
@@ -126,8 +128,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import { enhanceAccessibility, copyText } from './accessibility.js';
 import { createLanguageModel } from './language/model.js';
 import { createSpeechService } from './speech-service.js';
+import { createSpeechRecognitionService } from './speech-recognition-service.js';
 import { createLayoutController } from './layout-controller.js';
 import { createShortcutController } from './shortcuts/controller.js';
 import { createSelectionController } from './selection-controller.js';
@@ -148,6 +152,7 @@ import {
 import {
     cloneDefaultShortcut,
     loadBubbleBlacklist,
+    initializeStorage,
     loadDefaultTargetLanguage as loadStoredDefaultTargetLanguage,
     loadPanelTheme,
     loadSelectionBubbleEnabled,
@@ -168,35 +173,29 @@ import {
     createTranslationBoxView,
     createUiRefs
 } from './ui-views.js';
-import { getLocalizedValue } from './utils.js';
-
+import { getLocalizedValue, normalizeBrowserLanguage } from './utils.js';
+import { userscriptApi } from './userscript-api.js';
 
 function runUltimateTextSelectionTranslator() {
     'use strict';
 
     const bootstrapRuntime = createBootstrapRuntime({
-        windowRef: typeof window !== 'undefined' ? window : null,
         documentRef: document,
-        globalRef: typeof globalThis !== 'undefined' ? globalThis : null,
-        getImageConstructor: () => typeof Image === 'function' ? Image : null,
-        logoUrl: UTST_LOGO_URL,
-        addStyle: cssText => GM_addStyle(cssText),
         getShadowSafeStyleText,
-        setImportantStyle,
-        makeEvent: type => new CustomEvent(type)
+        setImportantStyle
     });
     const {
         connectLogoHydration,
         createIsolatedUiRoot,
         eventPathContains,
-        getTranslationLibrary,
-        scheduleUtstLogoPreload
+        getTranslationLibrary
     } = bootstrapRuntime;
 
-    scheduleUtstLogoPreload();
-
-    function bootstrap() {
+    const storageReady = initializeStorage();
+    async function bootstrap() {
+        await storageReady;
         const utstUi = createIsolatedUiRoot(UTST_STYLE_TEXT);
+        if (!utstUi) return;
         const utstUiRoot = utstUi.root;
 
         const translationLibrary = getTranslationLibrary();
@@ -205,7 +204,7 @@ function runUltimateTextSelectionTranslator() {
             return;
         }
 
-        const browserLang = navigator.language.split('-')[0];
+        const browserLang = normalizeBrowserLanguage(navigator.language);
         const languageModel = createLanguageModel({ translationLibrary, browserLang });
         const {
             googleTranslateLanguages,
@@ -248,16 +247,14 @@ function runUltimateTextSelectionTranslator() {
         }
 
         const toolLanguageOptionsHtml = buildToolLanguageOptionsHtml();
-        let sourceLanguageOptionsHtml = buildSourceLanguageOptionsHtml();
+        const sourceLanguageOptionsHtml = buildSourceLanguageOptionsHtml();
 
         const targetLanguageOptionsHtml = buildTargetLanguageOptions(true);
 
-        // Phase 1: create the views and collect their DOM references.
         const translationBox = createTranslationBoxView({
             documentRef: document,
             root: utstUiRoot,
             logoUrl: UTST_LOGO_URL,
-            dragHandleLabel,
             settingsTitle,
             googleTranslateLanguages,
             targetLanguageOptionsHtml,
@@ -306,11 +303,20 @@ function runUltimateTextSelectionTranslator() {
         } = uiRefs.selection;
         const {
             sourceLangSelect,
+            panelSwap,
             targetLangSelect,
             translationText,
+            sourceText: panelSourceText,
+            sourceLanguageLabel: panelSourceLanguageLabel,
+            targetLanguageLabel: panelTargetLanguageLabel,
+            sourceCopyButton: panelSourceCopy,
+            sourceSpeakButton: panelSourceSpeak,
+            sourceDictateButton: panelSourceDictate,
+            dictateButton: panelDictate,
             loadingOverlay: panelLoadingOverlay,
             loadingTitle: panelLoadingTitle,
             speakButton,
+            speakControl,
             speakTooltip,
             speakTranslated,
             speakOriginal,
@@ -351,6 +357,8 @@ function runUltimateTextSelectionTranslator() {
         const {
             title: fullscreenTitleEl,
             closeButton: fullscreenClose,
+            settingsButton: fullscreenSettings,
+            resizeHandle: fullscreenResizeHandle,
             sourceLangSelect: fullscreenSourceLangSelect,
             targetLangSelect: fullscreenTargetLangSelect,
             sourceLangCurrent: fullscreenSourceLangCurrent,
@@ -375,6 +383,7 @@ function runUltimateTextSelectionTranslator() {
             loadingTitle: fullscreenLoadingTitle,
             sourceCopyButton: fullscreenSourceCopy,
             sourceSpeakButton: fullscreenSourceSpeak,
+            sourceDictateButton: fullscreenSourceDictate,
             targetCopyButton: fullscreenTargetCopy,
             targetSpeakButton: fullscreenTargetSpeak
         } = uiRefs.fullscreen;
@@ -383,7 +392,6 @@ function runUltimateTextSelectionTranslator() {
             utstUiRoot.appendChild(panelThemePanel);
         }
 
-        // Phase 2: create services, controllers and their targeted facades.
         const layoutController = createLayoutController({
             windowRef: window,
             documentRef: document,
@@ -401,9 +409,13 @@ function runUltimateTextSelectionTranslator() {
             MARGIN,
             finishFullscreenTextareaResize,
             lockPageScrollForFullscreen,
+            isSidePanelViewport,
+            getSidePanelWidth,
+            setSidePanelWidth,
             markFullscreenResizeStart,
             placeBoxAtSelection,
             resetFullscreenTextareaResize,
+            restorePopupOverflow,
             syncFullscreenTextareaHeights,
             unlockPageScrollForFullscreen
         } = layoutController;
@@ -449,13 +461,13 @@ function runUltimateTextSelectionTranslator() {
             bindSelectionBubbleControls,
             bindSelectionEvents,
             getSelectionContext,
+            disableSelectionBubbleForCurrentSite,
             hideBubbleCloseMenu,
             hideSelectionBubble,
             isFullscreenOpen,
             scheduleSelectionBubbleUpdate,
             syncSelectionBubbleSettingsUi
         } = selectionController;
-        let themeController;
         let fullscreenController;
         let speechStateReady = false;
         const languagePanels = createLanguagePanels({
@@ -500,9 +512,8 @@ function runUltimateTextSelectionTranslator() {
             renderLanguageGrid,
             updateInlinePanelsPosition: updateLanguagePanelsPosition
         } = languagePanels;
-        themeController = createThemeController({
+        const themeController = createThemeController({
             windowRef: window,
-            documentRef: document,
             host: utstUi.host,
             translationBox,
             fullscreenOverlay,
@@ -510,6 +521,7 @@ function runUltimateTextSelectionTranslator() {
             copyButton,
             fullscreenToggle,
             settingsButton,
+            fullscreenSettings,
             backButton,
             fullscreenSwap,
             fullscreenSourceCopy,
@@ -544,6 +556,28 @@ function runUltimateTextSelectionTranslator() {
             refreshThemeOptionsLabels,
             setButtonIconStroke
         } = themeController;
+        const copyFeedbackStates = new WeakMap();
+        function showCopyFeedback(buttonEl) {
+            if (!buttonEl) return;
+            let state = copyFeedbackStates.get(buttonEl);
+            if (!state) {
+                state = { originalSvg: buttonEl.querySelector('svg')?.outerHTML || '', timer: 0 };
+                copyFeedbackStates.set(buttonEl, state);
+            }
+            clearTimeout(state.timer);
+            const svg = buttonEl.querySelector('svg');
+            if (svg) {
+                svg.outerHTML = `<svg class="utst-copy-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>`;
+            }
+            buttonEl.classList.add('utst-copy-success');
+            state.timer = setTimeout(() => {
+                const check = buttonEl.querySelector('.utst-copy-check');
+                if (check && state.originalSvg) check.outerHTML = state.originalSvg;
+                buttonEl.classList.remove('utst-copy-success');
+                applyIconThemeColors();
+                copyFeedbackStates.delete(buttonEl);
+            }, 900);
+        }
         const panelLanguageApi = {
             getBrowserLanguage: () => browserLang,
             getErrors: () => errors,
@@ -558,9 +592,12 @@ function runUltimateTextSelectionTranslator() {
             getSavedTargetLanguage,
             ensureSelectValue,
             resolveSourceSpeechLanguage,
-            resolveTargetSpeechLanguage
+            resolveSourceDictationLanguage,
+            resolveTargetSpeechLanguage,
+            getLanguageLabel
         };
         const translationApi = { translateText };
+        let dictationService = null;
         const panelSpeechApi = {
             stopSpeaking,
             speak,
@@ -569,7 +606,14 @@ function runUltimateTextSelectionTranslator() {
                 speakerId: currentSpeakerId
             })
         };
-        const panelLayoutApi = { placeBoxAtSelection };
+        const dictationApi = {
+            isSupported: () => dictationService?.isSupported() || false,
+            getState: () => dictationService?.getState() || { listening: false, targetId: null },
+            toggleDictation: options => dictationService?.toggle(options) || false,
+            stopDictation: targetId => dictationService?.stop(targetId) || false,
+            updateDictationLanguage: (targetId, language) => dictationService?.updateLanguage(targetId, language) || false
+        };
+        const panelLayoutApi = { placeBoxAtSelection, restorePopupOverflow };
         const panelSelectionApi = {
             hideSelectionBubble,
             hideBubbleCloseMenu,
@@ -578,7 +622,8 @@ function runUltimateTextSelectionTranslator() {
         const panelThemeApi = {
             setButtonIconStroke,
             copyFeedbackStroke: COPY_FEEDBACK_STROKE,
-            applyIconThemeColors
+            applyIconThemeColors,
+            showCopyFeedback
         };
         const panelRuntimeState = {
             getCurrentSelectedText: () => currentSelectedText,
@@ -595,7 +640,8 @@ function runUltimateTextSelectionTranslator() {
             },
             setDetectedSourceLanguage: language => {
                 detectedSourceLang = language;
-            }
+            },
+            getDetectedSourceLanguage: () => detectedSourceLang
         };
         const panelController = createPanelController({
             windowRef: window,
@@ -603,12 +649,21 @@ function runUltimateTextSelectionTranslator() {
             ui: {
                 translationBox,
                 sourceLangSelect,
+                panelSwap,
                 targetLangSelect,
                 defaultTranslateLangSelect,
                 translationText,
+                panelSourceText,
+                panelSourceLanguageLabel,
+                panelTargetLanguageLabel,
+                panelSourceCopy,
+                panelSourceSpeak,
+                panelSourceDictate,
+                panelDictate,
                 panelLoadingOverlay,
                 panelLoadingTitle,
                 speakButton,
+                speakControl,
                 speakTooltip,
                 speakTranslated,
                 speakOriginal,
@@ -625,14 +680,20 @@ function runUltimateTextSelectionTranslator() {
             languageApi: panelLanguageApi,
             translationApi,
             speechApi: panelSpeechApi,
+            dictationApi,
             layoutApi: panelLayoutApi,
             selectionApi: panelSelectionApi,
             themeApi: panelThemeApi,
             runtimeState: panelRuntimeState,
             setLoaderState,
             eventPathContains,
-            writeClipboardText: text => navigator.clipboard.writeText(text),
-            setTimer: (callback, delay) => setTimeout(callback, delay)
+            writeClipboardText: text => copyText(text),
+            closeOpenMenus: () => {
+                hideInlinePanels();
+                hideLanguagePanels();
+                if (panelThemePanel) panelThemePanel.style.display = 'none';
+                if (panelThemeTrigger) panelThemeTrigger.setAttribute('aria-expanded', 'false');
+            }
         });
         const {
             bindPanelActionControls,
@@ -661,6 +722,7 @@ function runUltimateTextSelectionTranslator() {
             }),
             getUiLanguage: () => resolveUiLang(toolLanguagePreference),
             onShortcutTriggered: () => {
+                if (isFullscreenOpen()) return;
                 const context = getSelectionContext();
                 openTranslationPanelForText(context ? context.text : '', context ? context.position : null);
             }
@@ -682,9 +744,13 @@ function runUltimateTextSelectionTranslator() {
 
         function resolveSourceSpeechLanguage(sourceValue) {
             if (sourceValue && sourceValue !== 'auto') return sourceValue;
-            if (detectedSourceLang && detectedSourceLang !== 'auto') return detectedSourceLang;
-            if (sourceLangSelect && sourceLangSelect.value && sourceLangSelect.value !== 'auto') return sourceLangSelect.value;
-            return browserLang;
+            return navigator.language || browserLang;
+        }
+
+        function resolveSourceDictationLanguage(sourceValue, detectedLanguage = 'auto') {
+            if (sourceValue && sourceValue !== 'auto') return sourceValue;
+            if (detectedLanguage && detectedLanguage !== 'auto') return detectedLanguage;
+            return 'auto';
         }
 
         function resolveTargetSpeechLanguage(targetValue, fallback = currentResolvedTargetLang) {
@@ -704,6 +770,7 @@ function runUltimateTextSelectionTranslator() {
             loaderEl.dataset.mode = mode === 'language' ? 'language' : 'translate';
             loaderEl.classList.toggle('is-active', !!active);
             loaderEl.setAttribute('aria-hidden', active ? 'false' : 'true');
+            loaderEl.parentElement.setAttribute('aria-busy', String(!!active));
             if (titleEl) {
                 titleEl.textContent = getLoaderTitleByMode(loaderEl.dataset.mode);
             }
@@ -821,7 +888,6 @@ function runUltimateTextSelectionTranslator() {
             isSupportedDetectedLanguage: detected => Boolean(googleTranslateLanguages[detected]),
             onDetectedLanguage: runDetectedLang => {
                 if (runDetectedLang && sourceLangSelect.querySelector(`option[value="${runDetectedLang}"]`)) {
-                    sourceLangSelect.value = runDetectedLang;
                     detectedSourceLang = runDetectedLang;
                 } else {
                     sourceLangSelect.value = 'auto';
@@ -832,28 +898,11 @@ function runUltimateTextSelectionTranslator() {
         });
 
         function translateText(text, sourceLang, targetLang, callback, position) {
-            if (!text) {
-                translationService.translateText(text, sourceLang, defaultTargetLang, (translation, resolvedTargetLang) => {
-                    callback(translation, position, resolvedTargetLang);
-                });
-                return;
-            }
-
-            let resolvedTargetLang = targetLang;
-            if (resolvedTargetLang === 'navigator') {
-                resolvedTargetLang = browserLang;
-            }
-            if (!resolvedTargetLang || resolvedTargetLang === '') {
-                let fallback = getSavedTargetLanguage();
-                if (fallback === 'navigator') fallback = browserLang;
-                resolvedTargetLang = fallback || defaultTargetLang;
-            }
-
-            translationService.translateText(text, sourceLang, resolvedTargetLang, (translation, serviceTargetLang) => {
-                callback(translation, position, serviceTargetLang);
+            const target = resolveTargetLanguageValue(targetLang, getSavedTargetLanguage());
+            return translationService.translateText(text, sourceLang, target, (translation, resolved, error, detected) => {
+                callback(translation, position, resolved, error, detected);
             });
         }
-
 
         let currentSpeakerId = null;
         let speechPlaying = false;
@@ -865,11 +914,13 @@ function runUltimateTextSelectionTranslator() {
         }
 
         function updateSpeechIconState() {
-            const panelActive = speechPlaying && currentSpeakerId && currentSpeakerId.startsWith('panel-');
+            const panelSourceActive = speechPlaying && currentSpeakerId === 'panel-original';
+            const panelTargetActive = speechPlaying && currentSpeakerId === 'panel-translated';
             const sourceActive = speechPlaying && currentSpeakerId === 'fs-source';
             const targetActive = speechPlaying && currentSpeakerId === 'fs-target';
 
-            setSpeakButtonVisualState(speakButton, panelActive);
+            setSpeakButtonVisualState(panelSourceSpeak, panelSourceActive);
+            setSpeakButtonVisualState(speakButton, panelTargetActive);
             setSpeakButtonVisualState(fullscreenSourceSpeak, sourceActive);
             setSpeakButtonVisualState(fullscreenTargetSpeak, targetActive);
         }
@@ -883,6 +934,37 @@ function runUltimateTextSelectionTranslator() {
             }
         });
 
+        function updateDictationButtonState(buttonEl, active) {
+            if (!buttonEl) return;
+            buttonEl.classList.toggle('utst-dictating', active);
+            buttonEl.setAttribute('aria-pressed', String(active));
+            const label = active ? 'Stop dictation' : 'Start dictation';
+            buttonEl.setAttribute('aria-label', label);
+            buttonEl.title = label;
+        }
+
+        function updateDictationVisualState(listening = false, targetId = null) {
+            updateDictationButtonState(panelSourceDictate, listening && targetId === 'panel-source');
+            updateDictationButtonState(panelDictate, listening && (targetId === 'panel-source' || targetId === 'panel-target'));
+            updateDictationButtonState(fullscreenSourceDictate, listening && targetId === 'fullscreen-source');
+        }
+
+        dictationService = createSpeechRecognitionService({
+            windowRef: window,
+            onStateChange: ({ listening, targetId }) => {
+                updateDictationVisualState(listening, targetId);
+            }
+        });
+
+        if (!dictationService.isSupported()) {
+            [panelSourceDictate, panelDictate, fullscreenSourceDictate].forEach(buttonEl => {
+                if (!buttonEl) return;
+                buttonEl.disabled = true;
+                buttonEl.setAttribute('aria-disabled', 'true');
+                buttonEl.title = 'Voice dictation is not supported by this browser';
+            });
+        }
+
         function stopSpeaking() {
             speechService.stopSpeaking();
         }
@@ -891,7 +973,6 @@ function runUltimateTextSelectionTranslator() {
             speechService.speak(text, lang, speakerId);
         }
 
-        // Phase 3: bind events and start the runtime in the original order.
         initializeSettingsControls();
 
         speechStateReady = true;
@@ -908,6 +989,8 @@ function runUltimateTextSelectionTranslator() {
                     fullscreenOverlay,
                     fullscreenTitleEl,
                     fullscreenClose,
+                    fullscreenSettings,
+                    fullscreenResizeHandle,
                     fullscreenSourceLangSelect,
                     fullscreenTargetLangSelect,
                     fullscreenSourceLangCurrent,
@@ -927,9 +1010,12 @@ function runUltimateTextSelectionTranslator() {
                     fullscreenLoadingTitle,
                     fullscreenSourceCopy,
                     fullscreenSourceSpeak,
+                    fullscreenSourceDictate,
                     fullscreenTargetCopy,
                     fullscreenTargetSpeak,
-                    fullscreenToggle
+                    fullscreenToggle,
+                    translationBox,
+                    settingsPanel
                 },
                 panelUi: { sourceLangSelect, targetLangSelect },
                 languageApi: {
@@ -942,6 +1028,7 @@ function runUltimateTextSelectionTranslator() {
                     buildTargetLanguageOptions,
                     resolveTargetLanguageValue,
                     resolveSourceSpeechLanguage,
+                    resolveSourceDictationLanguage,
                     resolveTargetSpeechLanguage,
                     ensureSelectValue,
                     getLoaderTitleByMode
@@ -955,12 +1042,16 @@ function runUltimateTextSelectionTranslator() {
                         speakerId: currentSpeakerId
                     })
                 },
+                dictationApi,
                 layoutApi: {
                     lockPageScrollForFullscreen,
                     unlockPageScrollForFullscreen,
                     resetFullscreenTextareaResize,
                     syncFullscreenTextareaHeights,
-                    markFullscreenResizeStart
+                    markFullscreenResizeStart,
+                    isSidePanelViewport,
+                    getSidePanelWidth,
+                    setSidePanelWidth
                 },
                 selectionApi: {
                     hideSelectionBubble,
@@ -977,7 +1068,8 @@ function runUltimateTextSelectionTranslator() {
                     refreshLanguagePanelTheme,
                     setButtonIconStroke,
                     copyFeedbackStroke: COPY_FEEDBACK_STROKE,
-                    applyIconThemeColors
+                    applyIconThemeColors,
+                    showCopyFeedback
                 },
                 panelApi: { syncPanelLoadingTitle },
                 runtimeState: {
@@ -993,10 +1085,8 @@ function runUltimateTextSelectionTranslator() {
                     getCurrentTranslatedText: () => currentTranslatedText
                 },
                 setLoaderState,
-                writeSourceClipboardText: text => navigator.clipboard.writeText(text),
-                writeTargetClipboardText: text => navigator.clipboard.writeText(text),
-                setSourceFeedbackTimer: (callback, delay) => setTimeout(callback, delay),
-                setTargetFeedbackTimer: (callback, delay) => setTimeout(callback, delay),
+                writeSourceClipboardText: text => copyText(text),
+                writeTargetClipboardText: text => copyText(text),
                 setTranslationTimer: (callback, delay) => setTimeout(callback, delay),
                 clearTimer: timerId => clearTimeout(timerId)
             });
@@ -1013,7 +1103,7 @@ function runUltimateTextSelectionTranslator() {
         bindFullscreenInputControls();
         bindFullscreenLanguageControls();
 
-        document.addEventListener('mousedown', (e) => {
+        document.addEventListener('pointerdown', (e) => {
             if (selectionBubble && !eventPathContains(e, selectionBubble)) {
                 hideBubbleCloseMenu();
             }
@@ -1022,10 +1112,17 @@ function runUltimateTextSelectionTranslator() {
             });
         });
 
+        let inlinePositionFrame = 0;
         function updateInlinePanelsPosition() {
-            updateLanguagePanelsPosition();
-            positionThemePanel();
+            if (inlinePositionFrame) return;
+            inlinePositionFrame = requestAnimationFrame(() => {
+                inlinePositionFrame = 0;
+                updateLanguagePanelsPosition();
+                positionThemePanel();
+            });
         }
+        window.visualViewport?.addEventListener('resize', updateInlinePanelsPosition, { passive: true });
+        window.visualViewport?.addEventListener('scroll', updateInlinePanelsPosition, { passive: true });
 
         attachInlineLanguagePanel(sourceLangSelect);
         attachInlineLanguagePanel(targetLangSelect);
@@ -1033,9 +1130,36 @@ function runUltimateTextSelectionTranslator() {
         attachInlineLanguagePanel(toolLanguageSelect);
         refreshLanguagePanelTheme();
 
-        [translationBox, settingsPanel, fullscreenOverlay, fullscreenPanel].forEach((scrollEl) => {
+        function openTranslationFromUserscriptMenu() {
+            if (isFullscreenOpen()) return;
+            const context = getSelectionContext();
+            openTranslationPanelForText(context?.text || '', context?.position || null);
+        }
+
+        function openSidePanelFromUserscriptMenu() {
+            if (isFullscreenOpen()) return;
+            const context = getSelectionContext();
+            if (context?.text) {
+                openTranslationPanelForText(context.text, context.position);
+            }
+            getFullscreenController().openFullscreenOverlay();
+        }
+
+        userscriptApi.registerMenuCommand('UTST — Ouvrir la traduction', openTranslationFromUserscriptMenu);
+        userscriptApi.registerMenuCommand('UTST — Ouvrir le volet de traduction', openSidePanelFromUserscriptMenu);
+        userscriptApi.registerMenuCommand('UTST — Désactiver la bulle sur ce site', () => {
+            if (disableSelectionBubbleForCurrentSite()) scheduleSelectionBubbleUpdate(0);
+        });
+
+        [translationBox, settingsPanel, fullscreenOverlay, fullscreenPanel, utstUiRoot.querySelector('#fullscreenColumns')].forEach((scrollEl) => {
             if (!scrollEl) return;
             scrollEl.addEventListener('scroll', () => {
+                if (scrollEl === settingsPanel) {
+                    hideInlinePanels();
+                    hideLanguagePanels();
+                    if (panelThemePanel) panelThemePanel.style.display = 'none';
+                    if (panelThemeTrigger) panelThemeTrigger.setAttribute('aria-expanded', 'false');
+                }
                 updateInlinePanelsPosition();
             }, { passive: true });
         });
@@ -1069,8 +1193,9 @@ function runUltimateTextSelectionTranslator() {
                 return;
             }
             updateInlinePanelsPosition();
-            scheduleSelectionBubbleUpdate(0);
-        }, true);
+            hideSelectionBubble();
+            scheduleSelectionBubbleUpdate(150);
+        }, { capture: true, passive: true });
         window.addEventListener('resize', () => {
             updateInlinePanelsPosition();
             syncFullscreenTextareaHeights();
@@ -1078,6 +1203,7 @@ function runUltimateTextSelectionTranslator() {
             scheduleSelectionBubbleUpdate(40);
         });
 
+        enhanceAccessibility(utstUi.root);
         requestAnimationFrame(() => {
             utstUi.host.style.removeProperty('visibility');
             utstUi.host.style.removeProperty('pointer-events');

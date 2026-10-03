@@ -31,6 +31,7 @@ No copy-paste, no external tools: translation happens directly on the page.
 <h3>Listening System</h3>
 <ul>
   <li>Integrated text-to-speech for translated content</li>
+  <li>Voice dictation with live transcription in the source text field</li>
   <li>Stable audio playback with instant stop control</li>
 </ul>
 
@@ -38,12 +39,13 @@ No copy-paste, no external tools: translation happens directly on the page.
 <ul>
   <li>Customizable translation keyboard shortcut</li>
   <li>Global theme system (Blue, Dark, Light)</li>
+  <li>Responsive translation popup and resizable desktop side panel</li>
   <li>Per-site control with built-in blacklist</li>
 </ul>
 
 <h3>Performance</h3>
 <ul>
-  <li>Works on all websites without configuration</li>
+  <li>Works on ordinary pages, editable text, and supported frames; browser and site restrictions can still apply</li>
   <li>Fast, lightweight, and optimized for smooth browsing</li>
 </ul>
 
@@ -63,7 +65,7 @@ You can also use the automatic selection button that appears at the end of highl
 ## Installation
 
 [![Install](https://img.shields.io/badge/Install-Ultimate%20Text%20Selection%20Translator-2f7d32?style=for-the-badge&logo=greasyfork&logoColor=white)](https://update.greasyfork.org/scripts/536284/Ultimate%20Text%20Selection%20Translator%20-%20Instantly%20Translate%20Any%20Selected%20Text.user.js)
-[![View Source](https://img.shields.io/badge/View-Source%20Code-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/blob/main/Ultimate%20Text%20Selection%20Translator.user.js)
+[![View Source](https://img.shields.io/badge/View-Source%20Code-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DREwX-code/Ultimate-Text-Selection-Translator/blob/main/src/main.js)
 
 1. Install a userscript manager such as **Tampermonkey** (recommended) or **Violentmonkey**.
 2. Click **Install Ultimate Text Selection Translator** above or install it from [GreasyFork](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text).

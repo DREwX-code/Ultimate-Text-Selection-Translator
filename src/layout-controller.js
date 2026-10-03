@@ -1,3 +1,5 @@
+import { getViewport, clampPosition } from './viewport.js';
+import { loadSidePanelWidth, saveSidePanelWidth } from './storage.js';
 export function createLayoutController({
     windowRef,
     documentRef,
@@ -39,61 +41,147 @@ export function createLayoutController({
     let prevBodyWidth = '';
     let prevBodyOverscrollBehavior = '';
     let prevBodyTouchAction = '';
+    let prevBodyPaddingRight = '';
+    let prevBodyBoxSizing = '';
+    let sidePanelMode = false;
+    let preferredSidePanelWidth = loadSidePanelWidth();
+    let popupOverflowSnapshot = null;
+    let popupPositionBeforeFullscreen = null;
+
+    function isMobilePopupViewport() {
+        return windowRef.matchMedia?.('(pointer: coarse) and (hover: none)').matches;
+    }
+
+    function isSidePanelViewport() {
+        return !isMobilePopupViewport() && windowRef.innerWidth >= 700;
+    }
+
+    function getSidePanelWidth() {
+        const maxWidth = Math.max(340, Math.min(760, windowRef.innerWidth - 280));
+        return Math.round(Math.min(maxWidth, Math.max(340, preferredSidePanelWidth)));
+    }
+
+    function applySidePanelWidth() {
+        const width = getSidePanelWidth();
+        fullscreenOverlay.style.setProperty('--utst-side-panel-width', `${width}px`);
+        if (sidePanelMode) documentRef.body.style.paddingRight = `${width}px`;
+        return width;
+    }
+
+    function setSidePanelWidth(width, { persist = true } = {}) {
+        const numericWidth = Number(width);
+        if (!Number.isFinite(numericWidth)) return applySidePanelWidth();
+        const maxWidth = Math.max(340, Math.min(760, windowRef.innerWidth - 280));
+        const nextWidth = Math.round(Math.min(maxWidth, Math.max(340, numericWidth)));
+        const widthChanged = preferredSidePanelWidth !== nextWidth;
+        preferredSidePanelWidth = nextWidth;
+        if (persist) saveSidePanelWidth(preferredSidePanelWidth);
+        return widthChanged ? applySidePanelWidth() : preferredSidePanelWidth;
+    }
+
+    function setStyleProperty(el, property, value, priority = '') {
+        if (!el) return;
+        if (value) el.style.setProperty(property, value, priority);
+        else el.style.removeProperty(property);
+    }
+
+    function enablePopupOverflowForZoom() {
+        if (popupOverflowSnapshot) return;
+        const elements = [documentRef.documentElement, documentRef.body].filter(Boolean);
+        popupOverflowSnapshot = elements.map(element => ({
+            element,
+            overflowX: element.style.getPropertyValue('overflow-x'),
+            overflowXPriority: element.style.getPropertyPriority('overflow-x'),
+            overflowY: element.style.getPropertyValue('overflow-y'),
+            overflowYPriority: element.style.getPropertyPriority('overflow-y')
+        }));
+        elements.forEach(element => {
+            element.style.setProperty('overflow-x', 'auto', 'important');
+            element.style.setProperty('overflow-y', 'auto', 'important');
+        });
+    }
+
+    function restorePopupOverflow() {
+        if (!popupOverflowSnapshot) return;
+        popupOverflowSnapshot.forEach(({ element, overflowX, overflowXPriority, overflowY, overflowYPriority }) => {
+            setStyleProperty(element, 'overflow-x', overflowX, overflowXPriority);
+            setStyleProperty(element, 'overflow-y', overflowY, overflowYPriority);
+        });
+        popupOverflowSnapshot = null;
+    }
 
     function clampBoxPosition(left, top) {
         const width = translationBox.offsetWidth || BOX_W;
         const height = translationBox.offsetHeight || BOX_H;
-        const scrollX = windowRef.scrollX || documentRef.documentElement.scrollLeft || 0;
-        const scrollY = windowRef.scrollY || documentRef.documentElement.scrollTop || 0;
-        const minLeft = scrollX + MARGIN;
-        const maxLeft = scrollX + windowRef.innerWidth - width - MARGIN;
-        const minTop = scrollY + MARGIN;
-        const maxTop = scrollY + windowRef.innerHeight - height - MARGIN;
-        return {
-            left: Math.min(Math.max(minLeft, left), maxLeft),
-            top: Math.min(Math.max(minTop, top), maxTop)
-        };
+        return clampPosition(left, top, width, height, getViewport(windowRef), MARGIN);
     }
 
     function placeBoxAtSelection(fallbackPosition) {
-        const sel = windowRef.getSelection();
-        if (!sel || !sel.rangeCount) {
-            if (fallbackPosition && Number.isFinite(fallbackPosition.x) && Number.isFinite(fallbackPosition.y)) {
-                const { left, top } = clampBoxPosition(fallbackPosition.x, fallbackPosition.y + MARGIN);
-                translationBox.style.left = `${left}px`;
-                translationBox.style.top = `${top}px`;
-            }
+        const view = getViewport(windowRef);
+        if (isMobilePopupViewport()) {
+            const position = clampBoxPosition(view.left + MARGIN, view.top + MARGIN);
+            translationBox.style.left = `${position.left}px`;
+            translationBox.style.top = `${position.top}px`;
             return;
         }
-
-        const rect = sel.getRangeAt(0).getBoundingClientRect();
-        const scrollX = windowRef.scrollX || documentRef.documentElement.scrollLeft || 0;
-        const scrollY = windowRef.scrollY || documentRef.documentElement.scrollTop || 0;
-
-        let left = rect.left + scrollX;
-        const topBelow = rect.bottom + scrollY + MARGIN;
-        const topAbove = rect.top + scrollY - BOX_H - MARGIN;
-
-        const vpLeft = scrollX + MARGIN;
-        const vpRight = scrollX + windowRef.innerWidth - MARGIN;
-        const vpBottom = scrollY + windowRef.innerHeight - MARGIN;
-
-        if (left + BOX_W > vpRight) left = vpRight - BOX_W;
-        if (left < vpLeft) left = vpLeft;
-
-        let top;
-        if (topBelow + BOX_H <= vpBottom) {
-            top = topBelow;
-        } else {
-            top = Math.max(topAbove, scrollY + MARGIN);
+        let x = fallbackPosition?.x ?? view.left + MARGIN;
+        let y = fallbackPosition?.y ?? view.top + MARGIN;
+        if (!fallbackPosition) {
+            const selection = windowRef.getSelection();
+            if (selection?.rangeCount && !selection.isCollapsed) {
+                const rect = selection.getRangeAt(0).getBoundingClientRect();
+                x = rect.left + windowRef.scrollX;
+                y = rect.bottom + windowRef.scrollY;
+            }
         }
-
-        translationBox.style.left = `${left}px`;
-        translationBox.style.top = `${top}px`;
+        const position = clampBoxPosition(x, y + MARGIN);
+        translationBox.style.left = `${position.left}px`;
+        translationBox.style.top = `${position.top}px`;
     }
 
+    let viewportFrame = 0;
+    function syncViewport() {
+        if (viewportFrame) return;
+        viewportFrame = requestFrame(() => {
+            viewportFrame = 0;
+            const visualScale = windowRef.visualViewport?.scale || 1;
+            const isVisualZoomed = Math.abs(visualScale - 1) > 0.001;
+            if (isVisualZoomed) {
+                if (translationBox.style.display === 'block') enablePopupOverflowForZoom();
+                return;
+            }
+            const view = getViewport(windowRef);
+            const host = translationBox.getRootNode().host || translationBox.parentElement;
+            host.style.setProperty('--utst-vw', `${view.width}px`);
+            host.style.setProperty('--utst-vh', `${view.height}px`);
+            const visualViewport = windowRef.visualViewport;
+            fullscreenOverlay.style.setProperty('top', `${visualViewport?.offsetTop || 0}px`, 'important');
+            fullscreenOverlay.style.setProperty('left', `${visualViewport?.offsetLeft || 0}px`, 'important');
+            fullscreenOverlay.style.setProperty('right', 'auto', 'important');
+            fullscreenOverlay.style.setProperty('bottom', 'auto', 'important');
+            fullscreenOverlay.style.setProperty('width', `${view.width}px`, 'important');
+            fullscreenOverlay.style.setProperty('height', `${view.height}px`, 'important');
+            if (sidePanelMode) applySidePanelWidth();
+            if (fullscreenScrollLocked) return;
+            if (translationBox.style.display === 'block' && isMobilePopupViewport()) {
+                const position = clampBoxPosition(view.left + MARGIN, view.top + MARGIN);
+                translationBox.style.left = `${position.left}px`;
+                translationBox.style.top = `${position.top}px`;
+            } else if (translationBox.style.display === 'block') {
+                const position = clampBoxPosition(parseFloat(translationBox.style.left) || view.left, parseFloat(translationBox.style.top) || view.top);
+                translationBox.style.left = `${position.left}px`;
+                translationBox.style.top = `${position.top}px`;
+            }
+        });
+    }
+    windowRef.visualViewport?.addEventListener('resize', syncViewport, { passive: true });
+    windowRef.visualViewport?.addEventListener('scroll', syncViewport, { passive: true });
+    windowRef.addEventListener('resize', syncViewport, { passive: true });
+    windowRef.addEventListener('scroll', syncViewport, { passive: true });
+    syncViewport();
+
     function getFullscreenTextareaBounds() {
-        const minHeight = 200;
+        const minHeight = Math.min(200, Math.max(80, Math.floor(getViewport(windowRef).height * 0.3)));
         const maxByViewport = Math.floor(windowRef.innerHeight * 0.62);
         const maxHeight = Math.max(minHeight, Math.min(560, maxByViewport));
         return { minHeight, maxHeight };
@@ -101,6 +189,12 @@ export function createLayoutController({
 
     function syncFullscreenTextareaHeights(preferredHeight = null) {
         if (!fullscreenSource || !fullscreenTarget) return;
+        if (windowRef.matchMedia('(max-width: 640px), (pointer: coarse) and (max-height: 500px)').matches) {
+            [fullscreenSource, fullscreenTarget, fullscreenSourceWrap, fullscreenTargetWrap].filter(Boolean).forEach(element => {
+                ['height', 'min-height', 'max-height'].forEach(property => element.style.removeProperty(property));
+            });
+            return;
+        }
         const { minHeight, maxHeight } = getFullscreenTextareaBounds();
         const sourceHeight = Math.round(fullscreenSource.getBoundingClientRect().height || minHeight);
         const targetHeight = Math.round(fullscreenTarget.getBoundingClientRect().height || minHeight);
@@ -171,8 +265,21 @@ export function createLayoutController({
 
     function lockPageScrollForFullscreen() {
         if (fullscreenScrollLocked) return;
+        popupPositionBeforeFullscreen = translationBox.style.display === 'block'
+            ? { left: translationBox.style.left, top: translationBox.style.top }
+            : null;
         const scrollY = windowRef.scrollY || windowRef.pageYOffset || 0;
         fullscreenScrollTop = scrollY;
+
+        sidePanelMode = isSidePanelViewport();
+        if (sidePanelMode) {
+            prevBodyPaddingRight = documentRef.body.style.paddingRight;
+            prevBodyBoxSizing = documentRef.body.style.boxSizing;
+            documentRef.body.style.boxSizing = 'border-box';
+            applySidePanelWidth();
+            fullscreenScrollLocked = true;
+            return;
+        }
 
         prevHtmlOverflow = documentRef.documentElement.style.overflow;
         prevHtmlOverscrollBehavior = documentRef.documentElement.style.overscrollBehavior;
@@ -198,6 +305,13 @@ export function createLayoutController({
 
     function unlockPageScrollForFullscreen() {
         if (!fullscreenScrollLocked) return;
+        if (sidePanelMode) {
+            documentRef.body.style.paddingRight = prevBodyPaddingRight;
+            documentRef.body.style.boxSizing = prevBodyBoxSizing;
+            fullscreenScrollLocked = false;
+            sidePanelMode = false;
+            return;
+        }
         documentRef.documentElement.style.overflow = prevHtmlOverflow;
         documentRef.documentElement.style.overscrollBehavior = prevHtmlOverscrollBehavior;
         documentRef.body.style.overflow = prevBodyOverflow;
@@ -209,14 +323,31 @@ export function createLayoutController({
         documentRef.body.style.touchAction = prevBodyTouchAction;
         windowRef.scrollTo(0, fullscreenScrollTop);
         fullscreenScrollLocked = false;
+        const savedPopupPosition = popupPositionBeforeFullscreen;
+        const restorePopupPosition = () => {
+            if (!savedPopupPosition || translationBox.style.display !== 'block') return;
+            translationBox.style.left = savedPopupPosition.left;
+            translationBox.style.top = savedPopupPosition.top;
+        };
+        restorePopupPosition();
+        requestFrame(restorePopupPosition);
+        popupPositionBeforeFullscreen = null;
     }
 
+    let lastViewportWidth = windowRef.innerWidth;
     windowRef.addEventListener('resize', () => {
-        if (translationBox.style.display === 'block') placeBoxAtSelection();
+        const currentWidth = windowRef.innerWidth;
+        if (currentWidth !== lastViewportWidth) {
+            lastViewportWidth = currentWidth;
+            syncViewport();
+            if (sidePanelMode) applySidePanelWidth();
+        }
     });
 
     if (dragHandle) {
-        dragHandle.addEventListener('mousedown', (e) => {
+        dragHandle.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
+            dragHandle.setPointerCapture?.(e.pointerId);
             isDragging = true;
             const rect = translationBox.getBoundingClientRect();
             const scrollX = windowRef.scrollX || documentRef.documentElement.scrollLeft || 0;
@@ -230,7 +361,7 @@ export function createLayoutController({
         });
     }
 
-    documentRef.addEventListener('mousemove', (e) => {
+    documentRef.addEventListener('pointermove', (e) => {
         if (fullscreenTextareaResizePending && fullscreenOverlay.style.display === 'flex' && fullscreenTextareaResizeActive) {
             if (!fullscreenTextareaResizeRaf) {
                 fullscreenTextareaResizeRaf = requestFrame(() => {
@@ -253,19 +384,27 @@ export function createLayoutController({
         translationBox.style.top = `${top}px`;
     });
 
-    documentRef.addEventListener('mouseup', () => {
+    const endDrag = () => {
         if (!isDragging) return;
         isDragging = false;
         documentRef.body.style.userSelect = previousUserSelect;
-    });
+    };
+    documentRef.addEventListener('pointerup', endDrag);
+    documentRef.addEventListener('pointercancel', endDrag);
+    windowRef.addEventListener('blur', endDrag);
 
     return {
         MARGIN,
+        enablePopupOverflowForZoom,
         finishFullscreenTextareaResize,
         lockPageScrollForFullscreen,
+        isSidePanelViewport,
+        getSidePanelWidth,
+        setSidePanelWidth,
         markFullscreenResizeStart,
         placeBoxAtSelection,
         resetFullscreenTextareaResize,
+        restorePopupOverflow,
         syncFullscreenTextareaHeights,
         unlockPageScrollForFullscreen
     };

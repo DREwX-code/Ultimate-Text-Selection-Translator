@@ -37,7 +37,7 @@ limitations under the License.
 */
 
 
-(function (global) {
+export const translationLibrary = (() => {
     'use strict';
 
     const supportedUiLanguages = ['en', 'fr', 'es', 'de', 'it', 'pt', 'ru', 'zh-CN', 'ja', 'ar', 'hi', 'ko', 'tr', 'nl', 'pl', 'id', 'vi', 'uk', 'he'];
@@ -242,10 +242,12 @@ limitations under the License.
             },
             'overlay': {
                 'title': 'Fullscreen Translator',
+                'sidePanelTitle': 'Translation panel',
                 'source': 'Source text',
                 'target': 'Translated text',
                 'translate': 'Translate',
                 'open': 'Fullscreen',
+                'sidePanelOpen': 'Open translation panel',
                 'sourceLangLabel': 'Source language',
                 'targetLangLabel': 'Target language'
             },
@@ -914,10 +916,12 @@ limitations under the License.
             },
             'overlay': {
                 'title': 'Traduction plein écran',
+                'sidePanelTitle': 'Volet de traduction',
                 'source': 'Texte source',
                 'target': 'Texte traduit',
                 'translate': 'Traduire',
                 'open': 'Plein écran',
+                'sidePanelOpen': 'Ouvrir le volet latéral',
                 'sourceLangLabel': 'Langue source',
                 'targetLangLabel': 'Langue cible'
             },
@@ -1390,11 +1394,5 @@ limitations under the License.
         languageNames
     };
 
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = library;
-    }
-
-    if (global) {
-        global.TraductionOutilTranslator = library;
-    }
-})(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this));
+    return library;
+})();

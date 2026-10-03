@@ -40,8 +40,6 @@ export default defineConfig({
     monkey({
       entry: entryPath,
       userscript: {
-        // These values only initialize vite-plugin-monkey.
-        // The final userscript header is injected verbatim from the header in src/main.js.
         name: 'Ultimate Text Selection Translator',
         match: ['*://*/*'],
       },

@@ -4,6 +4,7 @@ export function createFullscreenController({
     languageApi,
     translationApi,
     speechApi,
+    dictationApi,
     layoutApi,
     selectionApi,
     languagePanelsApi,
@@ -13,8 +14,6 @@ export function createFullscreenController({
     setLoaderState,
     writeSourceClipboardText,
     writeTargetClipboardText,
-    setSourceFeedbackTimer,
-    setTargetFeedbackTimer,
     setTranslationTimer,
     clearTimer
 }) {
@@ -22,6 +21,8 @@ export function createFullscreenController({
         fullscreenOverlay,
         fullscreenTitleEl,
         fullscreenClose,
+        fullscreenSettings,
+        fullscreenResizeHandle,
         fullscreenSourceLangSelect,
         fullscreenTargetLangSelect,
         fullscreenSourceLangCurrent,
@@ -41,9 +42,12 @@ export function createFullscreenController({
         fullscreenLoadingTitle,
         fullscreenSourceCopy,
         fullscreenSourceSpeak,
+        fullscreenSourceDictate,
         fullscreenTargetCopy,
         fullscreenTargetSpeak,
-        fullscreenToggle
+        fullscreenToggle,
+        translationBox,
+        settingsPanel
     } = ui;
     const { sourceLangSelect, targetLangSelect } = panelUi;
     const {
@@ -56,6 +60,7 @@ export function createFullscreenController({
         buildTargetLanguageOptions,
         resolveTargetLanguageValue,
         resolveSourceSpeechLanguage,
+        resolveSourceDictationLanguage,
         resolveTargetSpeechLanguage,
         ensureSelectValue,
         getLoaderTitleByMode
@@ -63,11 +68,21 @@ export function createFullscreenController({
     const { translateText } = translationApi;
     const { stopSpeaking, speak, getSpeechState } = speechApi;
     const {
+        isSupported: isDictationSupported = () => false,
+        toggleDictation = () => false,
+        stopDictation = () => false,
+        getState: getDictationState = () => ({ listening: false, targetId: null }),
+        updateDictationLanguage = () => false
+    } = dictationApi || {};
+    const {
         lockPageScrollForFullscreen,
         unlockPageScrollForFullscreen,
         resetFullscreenTextareaResize,
         syncFullscreenTextareaHeights,
-        markFullscreenResizeStart
+        markFullscreenResizeStart,
+        isSidePanelViewport = () => false,
+        getSidePanelWidth = () => 0,
+        setSidePanelWidth = () => 0
     } = layoutApi;
     const {
         hideSelectionBubble,
@@ -82,9 +97,8 @@ export function createFullscreenController({
     } = languagePanelsApi;
     const {
         refreshLanguagePanelTheme,
-        setButtonIconStroke,
-        copyFeedbackStroke,
-        applyIconThemeColors
+        applyIconThemeColors,
+        showCopyFeedback
     } = themeApi;
     const { syncPanelLoadingTitle } = panelApi;
     const {
@@ -95,10 +109,68 @@ export function createFullscreenController({
         getCurrentSelectedText,
         getCurrentTranslatedText
     } = runtimeState;
+    let cancelTranslation = () => {};
+    let composing = false;
+    let previousFocus = null;
+    const retry = fullscreenSource.ownerDocument.createElement('button');
+    retry.type = 'button';
+    retry.textContent = '↻';
+    retry.title = 'Retry / Réessayer';
+    retry.setAttribute('aria-label', retry.title);
+    retry.hidden = true;
+    const errorStatus = fullscreenSource.ownerDocument.createElement('div');
+    errorStatus.setAttribute('role', 'alert');
+    fullscreenTarget.parentElement.after(errorStatus, retry);
+    retry.addEventListener('click', () => scheduleFullscreenTranslate(0));
+    fullscreenSource.dir = fullscreenTarget.dir = 'auto';
     let fullscreenSwapRotation = 0;
     let fullscreenTranslateTimer = null;
     let fullscreenTranslateReason = 'translate';
     let fullscreenTranslateRequestId = 0;
+    let popupSnapshot = null;
+    let drawerSettingsParent = null;
+    let drawerSettingsNextSibling = null;
+    let drawerSettingsDisplay = '';
+    let drawerResizeActive = false;
+    let drawerResizeWidth = 0;
+    let actionControlsBound = false;
+    const documentRef = fullscreenOverlay.ownerDocument;
+    const windowRef = documentRef.defaultView;
+
+    function captureTextareaInsertion(textarea) {
+        const text = textarea.value || '';
+        const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : text.length;
+        const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : start;
+        const safeStart = Math.max(0, Math.min(text.length, start));
+        const safeEnd = Math.max(safeStart, Math.min(text.length, end));
+        const prefix = text.slice(0, safeStart);
+        const suffix = text.slice(safeEnd);
+        const followEnd = safeEnd === text.length;
+        return transcript => {
+            textarea.value = `${prefix}${transcript}${suffix}`;
+            const caret = prefix.length + transcript.length;
+            textarea.focus({ preventScroll: true });
+            textarea.setSelectionRange(caret, caret);
+            if (followEnd) windowRef.requestAnimationFrame(() => { textarea.scrollTop = textarea.scrollHeight; });
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+    }
+
+    function usePopupSettingsIcon() {
+        const popupIcon = translationBox?.querySelector('#settingsButton svg');
+        if (!popupIcon || !fullscreenSettings) return;
+        fullscreenSettings.replaceChildren(popupIcon.cloneNode(true));
+        applyIconThemeColors();
+    }
+
+    usePopupSettingsIcon();
+
+    function getSidePanelLabels(overlayLabels) {
+        return {
+            title: overlayLabels.sidePanelTitle || 'Translation panel',
+            open: overlayLabels.sidePanelOpen || 'Open translation panel'
+        };
+    }
 
     function getDetectedSourceLanguageLabel() {
         const detectedSourceLang = getDetectedSourceLanguage();
@@ -150,13 +222,106 @@ export function createFullscreenController({
     function updateFullscreenTexts() {
         const overlayLabels = getOverlayLabels();
         const langNames = getLanguageNames();
-        if (fullscreenTitleEl) fullscreenTitleEl.textContent = overlayLabels.title;
+        const sidePanelLabels = getSidePanelLabels(overlayLabels);
+        const settingsTitle = translationBox?.querySelector('#settingsHeaderTitle')?.textContent || 'Settings';
+        if (fullscreenTitleEl) fullscreenTitleEl.textContent = isSidePanelViewport() ? 'UTST' : overlayLabels.title;
         if (fullscreenSourceLabel) fullscreenSourceLabel.textContent = overlayLabels.source;
         if (fullscreenTargetLabel) fullscreenTargetLabel.textContent = overlayLabels.target;
-        if (fullscreenToggle) fullscreenToggle.title = overlayLabels.open;
+        if (fullscreenToggle) fullscreenToggle.title = isSidePanelViewport() ? sidePanelLabels.open : overlayLabels.open;
+        if (fullscreenSettings) {
+            fullscreenSettings.title = settingsTitle;
+            fullscreenSettings.setAttribute('aria-label', settingsTitle);
+        }
         if (fullscreenSourceLangSearch) fullscreenSourceLangSearch.placeholder = langNames.navigator;
         if (fullscreenTargetLangSearch) fullscreenTargetLangSearch.placeholder = langNames.navigator;
         syncLoadingTitles();
+    }
+
+    function hidePopupForSidePanel() {
+        if (!translationBox || popupSnapshot) return;
+        popupSnapshot = {
+            display: translationBox.style.display,
+            opacity: translationBox.style.opacity,
+            transform: translationBox.style.transform
+        };
+        translationBox.style.display = 'none';
+        translationBox.style.opacity = '0';
+        translationBox.style.transform = 'translateY(10px)';
+    }
+
+    function restorePopupAfterSidePanel() {
+        if (!translationBox || !popupSnapshot) return;
+        translationBox.style.display = popupSnapshot.display;
+        translationBox.style.opacity = popupSnapshot.opacity;
+        translationBox.style.transform = popupSnapshot.transform;
+        popupSnapshot = null;
+    }
+
+    function showDrawerSettings() {
+        if (!isSidePanelViewport() || !settingsPanel || !translationBox) return;
+        if (fullscreenOverlay.classList.contains('utst-drawer-settings-open')) {
+            hideDrawerSettings();
+            return;
+        }
+        drawerSettingsParent = settingsPanel.parentNode;
+        drawerSettingsNextSibling = settingsPanel.nextSibling;
+        drawerSettingsDisplay = settingsPanel.style.display;
+        fullscreenOverlay.classList.add('utst-drawer-settings-open');
+        hideLanguagePanels();
+        settingsPanel.style.display = 'block';
+        fullscreenOverlay.querySelector('#fullscreenPanel').appendChild(settingsPanel);
+        fullscreenSettings?.setAttribute('aria-pressed', 'true');
+        fullscreenSettings?.focus({ preventScroll: true });
+    }
+
+    function hideDrawerSettings() {
+        if (!settingsPanel || !drawerSettingsParent) return;
+        drawerSettingsParent.insertBefore(settingsPanel, drawerSettingsNextSibling);
+        settingsPanel.style.display = drawerSettingsDisplay || 'none';
+        fullscreenOverlay.classList.remove('utst-drawer-settings-open');
+        fullscreenSettings?.setAttribute('aria-pressed', 'false');
+        drawerSettingsParent = null;
+        drawerSettingsNextSibling = null;
+        drawerSettingsDisplay = '';
+    }
+
+    function updateDrawerWidth(clientX, persist = false) {
+        if (!windowRef) return;
+        drawerResizeWidth = setSidePanelWidth(windowRef.innerWidth - clientX, { persist });
+        fullscreenOverlay.style.setProperty('--utst-side-panel-width', `${drawerResizeWidth}px`);
+    }
+
+    function stopDrawerResize() {
+        if (!drawerResizeActive) return;
+        drawerResizeActive = false;
+        fullscreenOverlay.classList.remove('utst-side-resizing');
+        if (drawerResizeWidth) setSidePanelWidth(drawerResizeWidth, { persist: true });
+        documentRef.removeEventListener('pointermove', onDrawerResizeMove);
+        documentRef.removeEventListener('pointerup', stopDrawerResize);
+        documentRef.removeEventListener('pointercancel', stopDrawerResize);
+    }
+
+    function onDrawerResizeMove(event) {
+        if (!drawerResizeActive) return;
+        event.preventDefault();
+        updateDrawerWidth(event.clientX);
+    }
+
+    function startDrawerResize(event) {
+        if (!isSidePanelViewport() || !fullscreenOverlay.classList.contains('utst-side-panel')) return;
+        if (event.button !== 0) return;
+        event.preventDefault();
+        drawerResizeActive = true;
+        fullscreenOverlay.classList.add('utst-side-resizing');
+        try {
+            fullscreenResizeHandle?.setPointerCapture?.(event.pointerId);
+        } catch {
+            // Document listeners continue the resize when pointer capture is unavailable.
+        }
+        updateDrawerWidth(event.clientX);
+        documentRef.addEventListener('pointermove', onDrawerResizeMove);
+        documentRef.addEventListener('pointerup', stopDrawerResize);
+        documentRef.addEventListener('pointercancel', stopDrawerResize);
     }
 
     function refreshFullscreenLanguageSelects() {
@@ -179,10 +344,22 @@ export function createFullscreenController({
 
     function openFullscreenOverlay() {
         const defaultTargetLang = getDefaultTargetLanguage();
+        const sidePanel = isSidePanelViewport();
+        stopDictation();
         hideSelectionBubble();
         hideBubbleCloseMenu();
+        previousFocus = fullscreenOverlay.getRootNode().activeElement;
+        fullscreenOverlay.classList.remove('utst-side-panel-entering');
+        fullscreenOverlay.classList.toggle('utst-side-panel', sidePanel);
+        if (sidePanel) {
+            fullscreenOverlay.classList.add('utst-side-panel-entering');
+            fullscreenOverlay.style.setProperty('--utst-side-panel-width', `${getSidePanelWidth()}px`);
+        }
+        updateFullscreenTexts();
         lockPageScrollForFullscreen();
+        if (sidePanel) hidePopupForSidePanel();
         fullscreenOverlay.style.display = 'flex';
+        fullscreenClose.focus({ preventScroll: true });
         fullscreenSource.value = getCurrentSelectedText() || '';
         fullscreenTarget.value = getCurrentTranslatedText() || '';
         if (fullscreenSourceLangSelect) {
@@ -206,12 +383,22 @@ export function createFullscreenController({
     }
 
     function closeFullscreenOverlay() {
+        cancelTranslation();
+        clearTimer(fullscreenTranslateTimer);
+        fullscreenTranslateTimer = null;
         fullscreenTranslateRequestId++;
         setFullscreenLoading(false);
         resetFullscreenTextareaResize();
+        stopDrawerResize();
+        hideDrawerSettings();
         fullscreenOverlay.style.display = 'none';
+        fullscreenOverlay.classList.remove('utst-side-panel-entering');
+        fullscreenOverlay.classList.remove('utst-side-panel');
         unlockPageScrollForFullscreen();
+        restorePopupAfterSidePanel();
+        previousFocus?.focus?.({ preventScroll: true });
         stopSpeaking();
+        stopDictation('fullscreen-source');
         scheduleSelectionBubbleUpdate(0);
     }
 
@@ -229,17 +416,26 @@ export function createFullscreenController({
             return;
         }
         setFullscreenLoading(true, reason === 'language' ? 'language' : 'translate');
-        translateText(text, srcLang, target, (translation, pos, resolvedTargetLang) => {
+        cancelTranslation = translateText(text, srcLang, target, (translation, pos, resolvedTargetLang, error, detectedLanguage) => {
             if (requestId !== fullscreenTranslateRequestId) return;
             setFullscreenLoading(false, reason === 'language' ? 'language' : 'translate');
-            fullscreenTarget.value = translation;
+            fullscreenTarget.value = error ? '' : translation;
+            errorStatus.textContent = error?.message || '';
+            retry.hidden = !error;
             setCurrentResolvedTargetLanguage(resolvedTargetLang || getCurrentResolvedTargetLanguage());
+            if (!error && srcLang === 'auto' && detectedLanguage && getDictationState().targetId === 'fullscreen-source') {
+                updateDictationLanguage('fullscreen-source', detectedLanguage);
+            }
             updateFullscreenSourceCurrentLabel();
             updateFullscreenTargetCurrentLabel();
         }, { x: 0, y: 0 });
     }
 
     function scheduleFullscreenTranslate(delay = 250, reason = 'translate') {
+        cancelTranslation();
+        fullscreenTranslateRequestId++;
+        retry.hidden = true;
+        errorStatus.textContent = '';
         if (fullscreenTranslateTimer) clearTimer(fullscreenTranslateTimer);
         fullscreenTranslateReason = reason === 'language' ? 'language' : 'translate';
         fullscreenTranslateTimer = setTranslationTimer(() => {
@@ -274,26 +470,32 @@ export function createFullscreenController({
     }
 
     function bindFullscreenActionControls() {
-        if (fullscreenSourceCopy) fullscreenSourceCopy.addEventListener('click', () => {
-            const text = fullscreenSource.value || '';
-            if (!text) return;
-            writeSourceClipboardText(text);
-            const svg = fullscreenSourceCopy.querySelector('svg');
-            if (svg) {
-                setButtonIconStroke(fullscreenSourceCopy, copyFeedbackStroke);
-                setSourceFeedbackTimer(() => { applyIconThemeColors(); }, 900);
-            }
+        if (actionControlsBound) return;
+        actionControlsBound = true;
+        if (fullscreenSourceDictate) fullscreenSourceDictate.addEventListener('click', () => {
+            if (!isDictationSupported() || fullscreenSourceDictate.disabled) return;
+            const selectedSource = fullscreenSourceLangSelect ? fullscreenSourceLangSelect.value : 'auto';
+            const detectedSource = getDetectedSourceLanguage();
+            const recognitionLanguage = resolveSourceDictationLanguage(selectedSource, detectedSource);
+            toggleDictation({
+                targetId: 'fullscreen-source',
+                language: recognitionLanguage,
+                onTranscript: captureTextareaInsertion(fullscreenSource)
+            });
         });
 
-        if (fullscreenTargetCopy) fullscreenTargetCopy.addEventListener('click', () => {
+        if (fullscreenSourceCopy) fullscreenSourceCopy.addEventListener('click', async () => {
+            const text = fullscreenSource.value || '';
+            if (!text) return;
+            if (!await writeSourceClipboardText(text)) { fullscreenSource.focus(); fullscreenSource.select(); return; }
+            showCopyFeedback(fullscreenSourceCopy);
+        });
+
+        if (fullscreenTargetCopy) fullscreenTargetCopy.addEventListener('click', async () => {
             const text = fullscreenTarget.value || '';
             if (!text) return;
-            writeTargetClipboardText(text);
-            const svg = fullscreenTargetCopy.querySelector('svg');
-            if (svg) {
-                setButtonIconStroke(fullscreenTargetCopy, copyFeedbackStroke);
-                setTargetFeedbackTimer(() => { applyIconThemeColors(); }, 900);
-            }
+            if (!await writeTargetClipboardText(text)) { fullscreenTarget.focus(); fullscreenTarget.select(); return; }
+            showCopyFeedback(fullscreenTargetCopy);
         });
 
         if (fullscreenSourceSpeak) fullscreenSourceSpeak.addEventListener('click', () => {
@@ -329,8 +531,23 @@ export function createFullscreenController({
     function bindFullscreenInputControls() {
         if (fullscreenSource) fullscreenSource.addEventListener('pointerdown', markFullscreenResizeStart);
         if (fullscreenTarget) fullscreenTarget.addEventListener('pointerdown', markFullscreenResizeStart);
-        if (fullscreenSource) fullscreenSource.addEventListener('input', () => scheduleFullscreenTranslate(250, 'translate'));
+        if (fullscreenSource) {
+            fullscreenSource.addEventListener('compositionstart', () => { composing = true; cancelTranslation(); clearTimer(fullscreenTranslateTimer); fullscreenTranslateRequestId++; });
+            fullscreenSource.addEventListener('compositionend', () => { composing = false; scheduleFullscreenTranslate(350); });
+            fullscreenSource.addEventListener('input', () => {
+                if (!(fullscreenSource.value || '').trim()) {
+                    if (fullscreenSourceLangSelect) fullscreenSourceLangSelect.value = 'auto';
+                    setDetectedSourceLanguage('auto');
+                    updateFullscreenSourceCurrentLabel();
+                }
+                if (!composing) scheduleFullscreenTranslate(350);
+            });
+        }
+        fullscreenOverlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.stopPropagation(); closeFullscreenOverlay(); }
+        });
         if (fullscreenSourceLangSelect) fullscreenSourceLangSelect.addEventListener('change', () => {
+            stopDictation('fullscreen-source');
             if (fullscreenSourceLangSelect.value !== 'auto') {
                 setDetectedSourceLanguage(fullscreenSourceLangSelect.value);
             }
@@ -387,8 +604,8 @@ export function createFullscreenController({
         if (fullscreenSwap) {
             fullscreenSwap.addEventListener('click', () => {
                 swapFullscreenContent();
-                fullscreenSwapRotation += 360;
-                fullscreenSwap.style.transform = `rotate(${fullscreenSwapRotation}deg)`;
+                fullscreenSwapRotation += 180;
+                fullscreenSwap.style.setProperty('--utst-swap-rot', `${fullscreenSwapRotation}deg`);
             });
         }
 
@@ -398,6 +615,8 @@ export function createFullscreenController({
     function bindFullscreenNavigationControls() {
         if (fullscreenToggle) fullscreenToggle.addEventListener('click', openFullscreenOverlay);
         if (fullscreenClose) fullscreenClose.addEventListener('click', closeFullscreenOverlay);
+        if (fullscreenSettings) fullscreenSettings.addEventListener('click', showDrawerSettings);
+        if (fullscreenResizeHandle) fullscreenResizeHandle.addEventListener('pointerdown', startDrawerResize);
     }
 
     return {
