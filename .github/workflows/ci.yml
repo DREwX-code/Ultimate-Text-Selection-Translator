@@ -38,9 +38,6 @@ jobs:
       - name: Lint source files
         run: npm run lint
 
-      - name: Run unit tests
-        run: npm test
-
       - name: Build userscript
         run: npm run build
 

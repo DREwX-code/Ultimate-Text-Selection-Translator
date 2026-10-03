@@ -102,19 +102,40 @@ export function createSelectionController({
         return !!(rect && (rect.width || rect.height));
     }
 
-    function getSelectionContext() {
+    function getDeepActiveElement() {
         let active = documentRef.activeElement;
         while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
-        if (active?.closest?.('#utstShadowHost') || active?.getRootNode()?.host?.id === 'utstShadowHost') return null;
-        if (active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && /^(text|search|url|tel)$/i.test(active.type)))) {
-            const start = active.selectionStart, end = active.selectionEnd;
-            if (Number.isInteger(start) && end > start) {
-                const rect = active.getBoundingClientRect();
-                return { text: active.value.slice(start, end), rect, position: { x: rect.left + windowRef.scrollX, y: rect.bottom + windowRef.scrollY } };
+        return active;
+    }
+
+    function isToolElement(element) {
+        return element?.closest?.('#utstShadowHost') || element?.getRootNode()?.host?.id === 'utstShadowHost';
+    }
+
+    function isSelectableTextInput(element) {
+        return element?.tagName === 'TEXTAREA'
+            || (element?.tagName === 'INPUT' && /^(text|search|url|tel)$/i.test(element.type));
+    }
+
+    function getInputSelectionContext(element) {
+        if (!isSelectableTextInput(element)) return null;
+        const start = element.selectionStart;
+        const end = element.selectionEnd;
+        if (!Number.isInteger(start) || end <= start) return null;
+        const rect = element.getBoundingClientRect();
+        return {
+            text: element.value.slice(start, end),
+            rect,
+            position: {
+                x: rect.left + windowRef.scrollX,
+                y: rect.bottom + windowRef.scrollY
             }
-        }
-        if (active?.tagName === 'INPUT') return null;
-        const sel = active?.getRootNode()?.getSelection?.() || windowRef.getSelection();
+        };
+    }
+
+    function getDocumentSelectionContext(activeElement) {
+        if (activeElement?.tagName === 'INPUT') return null;
+        const sel = activeElement?.getRootNode()?.getSelection?.() || windowRef.getSelection();
         if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
         const text = sel.toString().trim();
         if (!text) return null;
@@ -130,6 +151,12 @@ export function createSelectionController({
                 y: rect.bottom + windowRef.scrollY
             }
         };
+    }
+
+    function getSelectionContext() {
+        const active = getDeepActiveElement();
+        if (isToolElement(active)) return null;
+        return getInputSelectionContext(active) || getDocumentSelectionContext(active);
     }
 
     function hideBubbleCloseMenu() {
