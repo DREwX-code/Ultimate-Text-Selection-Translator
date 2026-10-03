@@ -14,7 +14,7 @@ No copy-paste, no external tools: translation happens directly on the page.
 <p align="center">
   <img src="https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/UTST_poster.png" 
        alt="Ultimate Text Selection Translator Poster" 
-       width="80%">
+       width="100%">
 </p>
 
 
