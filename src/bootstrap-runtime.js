@@ -1,6 +1,6 @@
 import { translationLibrary } from './library/translation.js';
 
-export const UTST_LOGO_URL = 'https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script.png';
+export const UTST_LOGO_URL = 'https://raw.githubusercontent.com/DREwX-code/Ultimate-Text-Selection-Translator/refs/heads/main/assets/icons/Icon_Translate_Script_no-background.png';
 
 export function createBootstrapRuntime({
     documentRef,

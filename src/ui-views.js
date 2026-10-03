@@ -47,7 +47,7 @@ export function createTranslationBoxView({
     translationBox.innerHTML = `
             <div id="dragHandle" style="position:absolute; top:0; left:0; right:0; height:28px; background: linear-gradient(120deg, #3a3a3f, #4b4b52); border-radius: 12px 12px 0 0; cursor: move; display:flex; align-items:center; gap:8px; padding:0 68px 0 12px; color:#e5e5e5; font-size:12px; font-weight:600; letter-spacing:0.3px; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.08); user-select: none;">
                 <img class="utst-header-logo" data-utst-logo-src="${logoUrl}" alt="" draggable="false" aria-hidden="true">
-                <span id="utstPanelBrand" style="opacity:0.94; white-space:nowrap; font-weight:750; letter-spacing:0.8px;">UTST</span>
+                <span id="utstPanelBrand" style="opacity:0.94; white-space:nowrap; font-size:17px; font-weight:750; letter-spacing:0.8px; margin-left:3px;">UTST</span>
             </div>
 
             <div id="panelHeaderActions" style="position:absolute; top:0; right:0; height:28px; display:flex; align-items:center; gap:10px; padding:0 8px; z-index:10;">
@@ -281,7 +281,7 @@ export function createFullscreenOverlayView({
         <div id="fullscreenHeader" style="display:flex; align-items:center; justify-content: space-between; margin-bottom: 14px;">
             <div id="fullscreenTitleWrap">
                 <img class="utst-header-logo" data-utst-logo-src="${logoUrl}" alt="" draggable="false" aria-hidden="true">
-                <div id="fullscreenTitle" style="font-size:16px; font-weight:700; letter-spacing:0.4px; color:#e7e9ff; cursor: default;">${overlayLabels.title}</div>
+                <div id="fullscreenTitle" style="font-size:17px; font-weight:700; letter-spacing:0.4px; color:#e7e9ff; cursor: default; margin-left:3px;">${overlayLabels.title}</div>
             </div>
             <div style="display:flex; align-items:center; gap:4px;">
                 <button id="fullscreenSettings" type="button" title="Settings" aria-label="Settings" aria-pressed="false" style="cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:0; border-radius:8px; color:#e7e9ff; background:transparent;">

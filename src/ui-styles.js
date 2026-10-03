@@ -21,22 +21,28 @@ export const UTST_STYLE_TEXT = `
             }
 
             .utst-header-logo {
-                width: 16px !important;
-                height: 16px !important;
-                min-width: 16px !important;
+                width: 25px !important;
+                height: 25px !important;
+                min-width: 25px !important;
                 display: block !important;
                 object-fit: contain !important;
                 pointer-events: none !important;
                 user-select: none !important;
-                flex: 0 0 18px !important;
+                flex: 0 0 25px !important;
                 filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28)) !important;
             }
 
             #fullscreenTitleWrap {
                 display: flex !important;
                 align-items: center !important;
-                gap: 8px !important;
+                gap: 0 !important;
                 min-width: 0 !important;
+            }
+
+            #utstPanelBrand,
+            #fullscreenTitle {
+                font-size: 17px !important;
+                margin-left: 3px !important;
             }
 
             .utst-scroll {
@@ -242,18 +248,18 @@ export const UTST_STYLE_TEXT = `
             }
 
             #fullscreenOverlay.utst-side-panel #fullscreenTitleWrap {
-                gap: 10px !important;
+                gap: 0 !important;
             }
 
             #fullscreenOverlay.utst-side-panel .utst-header-logo {
-                width: 20px !important;
-                height: 20px !important;
-                min-width: 20px !important;
-                flex-basis: 20px !important;
+                width: 25px !important;
+                height: 25px !important;
+                min-width: 25px !important;
+                flex-basis: 25px !important;
             }
 
             #fullscreenOverlay.utst-side-panel #fullscreenTitle {
-                font-size: 18px !important;
+                font-size: 17px !important;
                 font-weight: 780 !important;
                 letter-spacing: .7px !important;
             }
@@ -1763,7 +1769,11 @@ export const UTST_STYLE_TEXT = `
                 #utstTranslationBox {
                     padding-top: 56px !important;
                 }
-                #utstTranslationBox:not(.utst-settings-open) { height: auto !important; }
+                #utstTranslationBox:not(.utst-settings-open) {
+                    height: auto !important;
+                    max-height: calc(var(--utst-vh, 100dvh) - 20px) !important;
+                    overflow-y: auto !important;
+                }
                 #utstTranslationBox:not(.utst-settings-open) #translatorPanel {
                     height: auto !important; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
                 }
