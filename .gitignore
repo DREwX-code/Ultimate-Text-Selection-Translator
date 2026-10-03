@@ -1,5 +1,4 @@
 node_modules/
-dist/
 
 # Local browser verification artifacts
 .playwright-cli/
