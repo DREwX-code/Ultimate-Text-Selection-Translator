@@ -78,7 +78,7 @@ You can also use the automatic selection button that appears at the end of highl
 2. Click **Install Ultimate Text Selection Translator** above or install it from [GreasyFork](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text).
 3. Select any text on a webpage and translate it instantly using either the keyboard shortcut or the floating translation button.
 
-For detailed installation instructions, see the **[Installation Guide](./INSTALLATION.md)**.
+For detailed installation instructions, see the **[Installation Guide](./docs/INSTALLATION.md)**.
 
 ## Technical Information
 
