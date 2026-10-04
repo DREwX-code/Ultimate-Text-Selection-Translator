@@ -8,7 +8,7 @@
 <p>
 <strong><a href="https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text">
 Ultimate Text Selection Translator</a></strong>
- is a powerful Tampermonkey userscript that allows you to instantly translate any selected text on any website using a customizable keyboard shortcut or the built-in floating translation button.
+ is a powerful Tampermonkey userscript for desktop and mobile that allows you to instantly translate any selected text on any website using a customizable keyboard shortcut or the built-in floating translation button.
 No copy-paste, no external tools: translation happens directly on the page.
 </p>
 <p align="center">
@@ -35,20 +35,27 @@ No copy-paste, no external tools: translation happens directly on the page.
   <li>Stable audio playback with instant stop control</li>
 </ul>
 
+<h3>Interface</h3>
+<ul>
+  <li>Responsive translation popup optimized for desktop, smartphones, and tablets</li>
+  <li>Adaptive popup sizing on mobile</li>
+  <li>Touch-compatible controls and text selection workflow</li>
+  <li>Resizable desktop side panel</li>
+</ul>
+
 <h3>Customization</h3>
 <ul>
   <li>Customizable translation keyboard shortcut</li>
   <li>Global theme system (Blue, Dark, Light)</li>
-  <li>Responsive translation popup and resizable desktop side panel</li>
   <li>Per-site control with built-in blacklist</li>
 </ul>
 
-<h3>Performance</h3>
+<h3>Performance & Compatibility</h3>
 <ul>
   <li>Works on ordinary pages, editable text, and supported frames; browser and site restrictions can still apply</li>
+  <li>Voice dictation support on compatible mobile browsers</li>
   <li>Fast, lightweight, and optimized for smooth browsing</li>
 </ul>
-
 
 ## Usage
 
