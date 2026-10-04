@@ -10,42 +10,95 @@ I recommend **Tampermonkey**, which provides the best compatibility with Ultimat
   <thead>
     <tr>
       <th>Browser</th>
-      <th>Recommended userscript manager(s)</th>
+      <th>Recommended</th>
+      <th>Alternatives</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/chrome/chrome-original.svg" width="16" alt="Chrome"> Chrome</td>
-      <td><strong><a href="https://www.tampermonkey.net/">Tampermonkey</a></strong> · <a href="https://violentmonkey.github.io/">Violentmonkey</a></td>
+      <td>
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/chrome/chrome-original.svg" width="16" alt="Chrome">
+        Chrome / Chromium-based browsers
+      </td>
+      <td>
+        <a href="https://www.tampermonkey.net/">Tampermonkey</a>
+      </td>
+      <td>
+        <a href="https://violentmonkey.github.io/get-it/">Violentmonkey</a> ·
+        <a href="https://scriptcat.org/">ScriptCat</a>
+      </td>
     </tr>
     <tr>
-      <td><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firefox/firefox-original.svg" width="16" alt="Firefox"> Firefox</td>
-      <td><strong><a href="https://www.tampermonkey.net/">Tampermonkey</a></strong> · <a href="https://violentmonkey.github.io/">Violentmonkey</a></td>
+      <td>
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firefox/firefox-original.svg" width="16" alt="Firefox">
+        Firefox
+      </td>
+      <td>
+        <a href="https://www.tampermonkey.net/">Tampermonkey</a>
+      </td>
+      <td>
+        <a href="https://violentmonkey.github.io/get-it/">Violentmonkey</a> ·
+        <a href="https://scriptcat.org/">ScriptCat</a>
+      </td>
     </tr>
     <tr>
-      <td><img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" width="16" alt="Edge"> Edge</td>
-      <td><strong><a href="https://www.tampermonkey.net/">Tampermonkey</a></strong> · <a href="https://violentmonkey.github.io/">Violentmonkey</a></td>
+      <td>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" width="16" alt="Edge">
+        Edge
+      </td>
+      <td>
+        <a href="https://www.tampermonkey.net/">Tampermonkey</a>
+      </td>
+      <td>
+        <a href="https://violentmonkey.github.io/get-it/">Violentmonkey</a> ·
+        <a href="https://scriptcat.org/">ScriptCat</a>
+      </td>
     </tr>
     <tr>
-      <td><img src="https://cdn.simpleicons.org/brave" width="16" alt="Brave"> Brave</td>
-      <td><strong><a href="https://www.tampermonkey.net/">Tampermonkey</a></strong> · <a href="https://violentmonkey.github.io/">Violentmonkey</a></td>
+      <td>
+        <img src="https://cdn.simpleicons.org/brave" width="16" alt="Brave">
+        Brave
+      </td>
+      <td>
+        <a href="https://www.tampermonkey.net/">Tampermonkey</a>
+      </td>
+      <td>
+        <a href="https://violentmonkey.github.io/get-it/">Violentmonkey</a>
+      </td>
     </tr>
     <tr>
-      <td><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/opera/opera-original.svg" width="16" alt="Opera"> Opera</td>
-      <td><strong><a href="https://www.tampermonkey.net/">Tampermonkey</a></strong> · <a href="https://violentmonkey.github.io/">Violentmonkey</a></td>
+      <td>
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/opera/opera-original.svg" width="16" alt="Opera">
+        Opera
+      </td>
+      <td>
+        <a href="https://www.tampermonkey.net/">Tampermonkey</a>
+      </td>
+      <td>
+        <a href="https://violentmonkey.github.io/get-it/">Violentmonkey</a>
+      </td>
     </tr>
     <tr>
-      <td><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/safari/safari-original.svg" width="16" alt="Safari"> Safari</td>
-      <td><a href="https://apps.apple.com/app/userscripts/id1463298887">Userscripts</a> · <a href="https://www.tampermonkey.net/">Tampermonkey</a></td>
+      <td>
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/safari/safari-original.svg" width="16" alt="Safari">
+        Safari (macOS / iPhone / iPad)
+      </td>
+      <td>
+        <a href="https://apps.apple.com/app/userscripts/id1463298887">Userscripts</a>
+      </td>
+      <td>
+        <a href="https://apps.apple.com/app/stay-for-safari/id1591620171">Stay</a>
+      </td>
     </tr>
   </tbody>
 </table>
 
 ## Step 2 — Install Ultimate Text Selection Translator
 
-Open the **[Ultimate Text Selection Translator page on GreasyFork](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)**.
+[![Install Userscript](https://img.shields.io/badge/Install-Userscript-2ea44f?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://update.greasyfork.org/scripts/536284/Ultimate%20Text%20Selection%20Translator%20-%20Instantly%20Translate%20Any%20Selected%20Text.user.js)
+[![View on Greasy Fork](https://img.shields.io/badge/View-Greasy%20Fork-960000?style=for-the-badge&logo=greasyfork&logoColor=white)](https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text)
 
-Click **Install this script**, then confirm the installation in your userscript manager.
+Click **Install Userscript** for direct installation, or open the **<a href="https://greasyfork.org/en/scripts/536284-ultimate-text-selection-translator-instantly-translate-any-selected-text">Greasy Fork page</a>** to review the script before installing it.
 
 ## Step 3 — Start Translating
 
